@@ -57,6 +57,24 @@ Key enforced rules beyond PSR-12 baseline: `declare_strict_types`, `no_unused_im
 
 The app container is named `cronospulse_app`. MySQL is forwarded to `127.0.0.1:3306`.
 
+## Authentication Model
+
+The site is **public by default**. Authentication is optional and unlocks additional features — never gate data viewing behind a login wall.
+
+**Route grouping in `routes/web.php`:**
+- No middleware → publicly accessible to everyone
+- `middleware('guest')` → login/register forms, redirect away if already logged in
+- `middleware('auth')` → strictly requires authentication (dashboard, logout, user-specific actions)
+
+**Auth-aware components:** For features that are enhanced when logged in (e.g. recent lookups, saved stations), check `auth()->check()` or `auth()->user()` inside the Livewire component or view — do not apply `auth` middleware to the route itself.
+
+```php
+// In a Livewire component or Blade view
+@auth
+    {{-- Show "Save this station" button --}}
+@endauth
+```
+
 ## Documentation
 
 Whenever a migration is created or modified, or a model is added or changed, update `docs/data-model.md` to reflect the current schema — columns, types, relationships, and any index or constraint changes.
