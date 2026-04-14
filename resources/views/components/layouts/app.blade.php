@@ -18,7 +18,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
@@ -26,13 +26,16 @@
 <body
     class="min-h-screen bg-bg text-text antialiased"
     x-data="{
-        dark: localStorage.getItem('theme') === 'dark',
+        theme: localStorage.getItem('theme') || 'light',
         mobileOpen: false,
-        toggle() {
-            this.dark = !this.dark;
-            localStorage.setItem('theme', this.dark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', this.dark ? 'dark' : '');
+        init() {
+            this.$watch('theme', val => {
+                localStorage.setItem('theme', val);
+                document.documentElement.setAttribute('data-theme', val === 'dark' ? 'dark' : '');
+            });
+            document.documentElement.setAttribute('data-theme', this.theme === 'dark' ? 'dark' : '');
         },
+        toggle() { this.theme = this.theme === 'light' ? 'dark' : 'light'; },
     }"
 >
 
@@ -53,21 +56,7 @@
             {{-- Right side: theme toggle + auth + mobile hamburger --}}
             <div class="flex items-center gap-2">
 
-                {{-- Theme toggle --}}
-                <button
-                    @click="toggle()"
-                    class="rounded-md p-2 text-muted transition-colors hover:bg-surface-hover hover:text-text"
-                    :aria-label="dark ? 'Switch to light mode' : 'Switch to dark mode'"
-                >
-                    {{-- Sun icon — shown in dark mode --}}
-                    <svg x-show="dark" xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m8.66-9H20M4 12H3m15.36-6.36-.71.71M6.34 17.66l-.71.71M17.66 17.66l.71.71M6.34 6.34l-.71-.71M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                    </svg>
-                    {{-- Moon icon — shown in light mode --}}
-                    <svg x-show="!dark" xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-                    </svg>
-                </button>
+                <x-theme-toggle />
 
                 @auth
                     <form method="POST" action="{{ route('logout') }}">

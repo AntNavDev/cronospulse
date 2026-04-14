@@ -98,6 +98,88 @@ Write unit tests whenever new functionality is added — services, models, contr
 | `app/Livewire/` | All Livewire component classes |
 | `resources/views/livewire/` | Blade views for Livewire components (mirror the class namespace, e.g. `app/Livewire/Earthquakes/Map.php` → `resources/views/livewire/earthquakes/map.blade.php`) |
 | `resources/js/app.js` | Alpine.js component registrations and JS entry point |
-| `resources/css/app.css` | Tailwind entry point — add custom `@theme` overrides here |
+| `resources/css/app.css` | Tailwind entry point — all theme tokens and color variables live here |
 | `app/Services/` | Service classes for USGS API calls and data transformation |
 | `app/Http/Controllers/` | Thin controllers; prefer Livewire full-page components for interactive pages |
+
+## Theme System
+
+This project uses a CSS custom property theme with Tailwind v4.
+
+### How it works
+
+- All colors are defined as CSS variables in `resources/css/app.css`
+- `:root` is the **light** theme (default — no attribute needed)
+- `[data-theme="dark"]` overrides to the dark theme
+- Alpine.js on `<body>` manages the toggle via a `theme` string and persists to `localStorage`
+- Tailwind v4 exposes the variables as utility classes via `@theme inline` in `app.css`
+
+### Rules for Blade and Livewire templates
+
+- **Never hardcode hex values.** Always use Tailwind utility aliases or CSS variables directly.
+- **Prefer Tailwind utilities** (`bg-surface`, `text-muted`, `border-border`) for standard cases.
+- **Use `[var(--color-...)]` arbitrary values** for CSS variables not covered by the Tailwind aliases (e.g. badge colors in dedicated components).
+- **Use inline styles** (`style="color: var(--color-text-link)"`) for one-off ad-hoc usage of non-aliased variables in templates.
+
+### Available Tailwind utility aliases
+
+| Utility | CSS variable |
+|---|---|
+| `bg-bg` | `--color-bg` |
+| `bg-surface` | `--color-surface` |
+| `bg-surface-raised` | `--color-surface-raised` |
+| `bg-surface-sunken` | `--color-surface-sunken` |
+| `bg-surface-hover` | `--color-surface-hover` |
+| `bg-surface-active` | `--color-surface-active` |
+| `border-border` | `--color-border` |
+| `text-text` | `--color-text` |
+| `text-muted` | `--color-text-muted` |
+| `bg-accent` / `text-accent` | `--color-accent` |
+| `bg-accent-hover` | `--color-accent-hover` |
+| `bg-accent-subtle` | `--color-accent-subtle` |
+| `bg-accent-muted` | `--color-accent-muted` |
+| `bg-secondary` / `text-secondary` | `--color-accent-secondary` |
+| `text-success` / `bg-success` | `--color-success` |
+| `text-danger` / `bg-danger` | `--color-danger` |
+| `text-warning` / `bg-warning` | `--color-warning` |
+| `text-info` / `bg-info` | `--color-info` |
+
+### USGS-specific badge variables
+
+Use `<x-label variant="eq">` for event type badges. For ad-hoc one-off usage, apply inline styles directly — both themes are covered automatically.
+
+| Variable group | Purpose |
+|---|---|
+| `--color-badge-eq-bg/text/border` | Earthquake events |
+| `--color-badge-flood-bg/text/border` | Flood / streamflow alerts |
+| `--color-badge-vol-bg/text/border` | Volcano monitoring |
+| `--color-badge-geo-bg/text/border` | Landslide / geologic hazard |
+
+Ad-hoc example:
+
+```blade
+<span style="
+    background: var(--color-badge-eq-bg);
+    color: var(--color-badge-eq-text);
+    border: 1px solid var(--color-badge-eq-border);
+" class="rounded-full px-2 py-0.5 text-xs font-medium">
+    M4+
+</span>
+```
+
+### Skeleton loading states
+
+```blade
+<div class="skeleton h-4 w-32"></div>
+```
+
+### Adding a new color
+
+1. Add to `:root` in `app.css` (light value)
+2. Add to `[data-theme="dark"]` in `app.css` (dark value)
+3. If you want a Tailwind utility class, add an entry to `@theme inline` in `app.css`
+4. Document it in this file
+
+### Swapping the entire palette
+
+All color values are isolated to the `:root` and `[data-theme="dark"]` blocks in `app.css`. Variable names are stable — only the hex values need to change. No Blade or Livewire files need to be touched when swapping palettes.
