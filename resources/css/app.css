@@ -1,14 +1,284 @@
-@import 'tailwindcss';
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
 
-/* Enable class-based dark mode — add class="dark" to <html> to activate dark: utilities */
-@custom-variant dark (&:where(.dark, .dark *));
+@source "../../vendor/livewire/livewire/src/**/*.blade.php";
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
+@source "../../storage/framework/views/*.php";
+@source "../**/*.blade.php";
+@source "../**/*.js";
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+@theme inline {
+    --font-family-sans:    'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-family-mono:    'DM Mono', ui-monospace, monospace;
+    --font-family-display: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* ── Tailwind utility aliases → CSS variables ── */
+    /* These let you write bg-surface, text-muted, border-border, etc. */
+    --color-bg:               var(--color-bg);
+    --color-surface:          var(--color-surface);
+    --color-surface-raised:   var(--color-surface-raised);
+    --color-surface-sunken:   var(--color-surface-sunken);
+    --color-surface-hover:    var(--color-surface-hover);
+    --color-surface-active:   var(--color-surface-active);
+    --color-border:           var(--color-border);
+    --color-text:             var(--color-text);
+    --color-muted:            var(--color-text-muted);
+    --color-accent:           var(--color-accent);
+    --color-accent-hover:     var(--color-accent-hover);
+    --color-accent-subtle:    var(--color-accent-subtle);
+    --color-accent-muted:     var(--color-accent-muted);
+    --color-secondary:        var(--color-accent-secondary);
+    --color-success:          var(--color-success);
+    --color-danger:           var(--color-danger);
+    --color-warning:          var(--color-warning);
+    --color-info:             var(--color-info);
+
+    /* ── Animations ── */
+    --animate-gradient-shift: gradient-shift 12s ease infinite;
+}
+
+/* ═══════════════════════════════════════════
+   DEFAULT: LIGHT THEME — Forest Understory
+   Warm off-white parchment bg.
+   Accent shifts to deeper moss for contrast.
+   ═══════════════════════════════════════════ */
+
+/*
+   ┌─────────────────────────────────────────────┐
+   │  SWAPPING THEMES                            │
+   │                                             │
+   │  To use a different palette, replace the    │
+   │  hex values in :root (light) and            │
+   │  [data-theme="dark"] (dark) below.          │
+   │                                             │
+   │  Do NOT change variable names — Blade and   │
+   │  Livewire templates reference these names.  │
+   │  Only the hex values should change.         │
+   └─────────────────────────────────────────────┘
+*/
+
+:root {
+    /* ─── Backgrounds ─────────────────────────── */
+    --color-bg:               #F4F1EC;
+    --color-surface:          #FFFFFF;
+    --color-surface-raised:   #EDE9E2;
+    --color-surface-sunken:   #E8E4DC;
+    --color-surface-overlay:  #EFEDE8;
+    --color-surface-hover:    #E8E4DC;
+    --color-surface-active:   #E0DBCF;
+
+    /* ─── Borders ─────────────────────────────── */
+    --color-border:           #D4CEBC;
+    --color-border-focus:     #4A7838;
+
+    /* ─── Text ────────────────────────────────── */
+    --color-text:             #1A2010;
+    --color-text-muted:       #5A6850;
+    --color-text-disabled:    #A8B4A0;
+    --color-text-placeholder: #A8B4A0;
+    --color-text-inverse:     #F4F1EC;
+    --color-text-link:        #3A6028;
+    --color-text-link-hover:  #2A4818;
+    --color-text-on-accent:   #FFFFFF;
+
+    /* ─── Accent (moss green) ─────────────────── */
+    --color-accent:           #4A7838;
+    --color-accent-hover:     #3A6028;
+    --color-accent-subtle:    #EAF2E4;
+    --color-accent-muted:     #C8DDB8;
+    --color-accent-secondary: #2060A8;
+    --color-accent-secondary-hover: #0F4A8A;
+
+    /* ─── Gold highlight ──────────────────────── */
+    --color-gold:             #9A7820;
+    --color-gold-hover:       #7A5C10;
+    --color-gold-muted:       #F0E8C8;
+
+    /* ─── Semantic ────────────────────────────── */
+    --color-success:          #2E7038;
+    --color-success-hover:    #205828;
+    --color-danger:           #943020;
+    --color-danger-hover:     #782818;
+    --color-warning:          #9A6A10;
+    --color-warning-hover:    #7A5008;
+    --color-info:             #2060A8;
+    --color-info-hover:       #0F4A8A;
+
+    /* ─── Focus / UI chrome ───────────────────── */
+    --color-focus-ring:       #C8DDB8;
+    --color-scrollbar:        #C8C2B0;
+    --color-scrollbar-hover:  #B8B2A0;
+    --color-skeleton:         #E0DBCF;
+    --color-skeleton-shine:   #EDE9E2;
+    --color-tooltip-bg:       #1A2010;
+    --color-tooltip-text:     #F4F1EC;
+
+    /* ─── Badge / status pill neutrals ───────── */
+    --color-badge-neutral-bg:   #EDE9E2;
+    --color-badge-neutral-text: #5A6850;
+
+    /* ─── USGS event type badge colors ───────── */
+    /* Earthquake */
+    --color-badge-eq-bg:        #FBE8E4;
+    --color-badge-eq-text:      #943020;
+    --color-badge-eq-border:    #F0C8C0;
+
+    /* Flood / streamflow */
+    --color-badge-flood-bg:     #E4F0FB;
+    --color-badge-flood-text:   #2060A8;
+    --color-badge-flood-border: #C0D8F0;
+
+    /* Volcano */
+    --color-badge-vol-bg:       #FBF4DC;
+    --color-badge-vol-text:     #9A6A10;
+    --color-badge-vol-border:   #ECD898;
+
+    /* Landslide / geologic hazard */
+    --color-badge-geo-bg:       #F5F0E0;
+    --color-badge-geo-text:     #7A6030;
+    --color-badge-geo-border:   #DDD0A0;
+}
+
+/* ═══════════════════════════════════════════
+   DARK THEME — Forest Understory
+   Deep green-black bg. Moss green accent.
+   Warm gold highlight. Cool blue for data/info.
+   ═══════════════════════════════════════════ */
+[data-theme="dark"] {
+    /* ─── Backgrounds ─────────────────────────── */
+    --color-bg:               #090E0A;
+    --color-surface:          #10180F;
+    --color-surface-raised:   #182318;
+    --color-surface-sunken:   #060A06;
+    --color-surface-overlay:  #0D1510;
+    --color-surface-hover:    #1E2C1C;
+    --color-surface-active:   #243424;
+
+    /* ─── Borders ─────────────────────────────── */
+    --color-border:           #243424;
+    --color-border-focus:     #C8A840;
+
+    /* ─── Text ────────────────────────────────── */
+    --color-text:             #DCE8D0;
+    --color-text-muted:       #7A9070;
+    --color-text-disabled:    #3A5030;
+    --color-text-placeholder: #3A5030;
+    --color-text-inverse:     #090E0A;
+    --color-text-link:        #C8A840;
+    --color-text-link-hover:  #E0C860;
+    --color-text-on-accent:   #090E0A;
+
+    /* ─── Accent (moss green) ─────────────────── */
+    --color-accent:           #4A7838;
+    --color-accent-hover:     #3A6028;
+    --color-accent-subtle:    #1A2818;
+    --color-accent-muted:     #243424;
+    --color-accent-secondary: #4A88C8;
+    --color-accent-secondary-hover: #2A68A8;
+
+    /* ─── Gold highlight ──────────────────────── */
+    --color-gold:             #C8A840;
+    --color-gold-hover:       #A88820;
+    --color-gold-muted:       #2A2410;
+
+    /* ─── Semantic ────────────────────────────── */
+    --color-success:          #4A9C5A;
+    --color-success-hover:    #3A7C48;
+    --color-danger:           #B85040;
+    --color-danger-hover:     #983830;
+    --color-warning:          #C49030;
+    --color-warning-hover:    #A47020;
+    --color-info:             #4A88C8;
+    --color-info-hover:       #2A68A8;
+
+    /* ─── Focus / UI chrome ───────────────────── */
+    --color-focus-ring:       #243424;
+    --color-scrollbar:        #243424;
+    --color-scrollbar-hover:  #2E4028;
+    --color-skeleton:         #182318;
+    --color-skeleton-shine:   #243424;
+    --color-tooltip-bg:       #243424;
+    --color-tooltip-text:     #DCE8D0;
+
+    /* ─── Badge / status pill neutrals ───────── */
+    --color-badge-neutral-bg:   #182318;
+    --color-badge-neutral-text: #7A9070;
+
+    /* ─── USGS event type badge colors ───────── */
+    /* Earthquake */
+    --color-badge-eq-bg:        #2A1410;
+    --color-badge-eq-text:      #E07060;
+    --color-badge-eq-border:    #3A2018;
+
+    /* Flood / streamflow */
+    --color-badge-flood-bg:     #0A1E2A;
+    --color-badge-flood-text:   #4A90C8;
+    --color-badge-flood-border: #0E2A3A;
+
+    /* Volcano */
+    --color-badge-vol-bg:       #1A1408;
+    --color-badge-vol-text:     #C8A840;
+    --color-badge-vol-border:   #2A2010;
+
+    /* Landslide / geologic hazard */
+    --color-badge-geo-bg:       #1E1C10;
+    --color-badge-geo-text:     #A09050;
+    --color-badge-geo-border:   #2E2A18;
+}
+
+/* ─── Base resets ─────────────────────────────── */
+@layer base {
+    :focus-visible {
+        outline: 2px solid var(--color-border-focus);
+        outline-offset: 2px;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        font-family: var(--font-family-sans);
+    }
+
+    ::selection {
+        background-color: var(--color-accent-muted);
+        color: var(--color-text);
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--color-scrollbar); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--color-scrollbar-hover); }
+
+    @keyframes gradient-shift {
+        0%, 100% { background-position: 0% 50%; }
+        50%       { background-position: 100% 50%; }
+    }
+}
+
+/* ─── Utility: hide number spin buttons ──────── */
+.no-spin::-webkit-inner-spin-button,
+.no-spin::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.no-spin { -moz-appearance: textfield; }
+
+/* ─── Skeleton loading animation ─────────────── */
+.skeleton {
+    background: var(--color-skeleton);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, var(--color-skeleton-shine) 50%, transparent 100%);
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-sweep {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
 }
