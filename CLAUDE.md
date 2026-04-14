@@ -57,6 +57,22 @@ Key enforced rules beyond PSR-12 baseline: `declare_strict_types`, `no_unused_im
 
 The app container is named `cronospulse_app`. MySQL is forwarded to `127.0.0.1:3306`.
 
+## Documentation
+
+Whenever a migration is created or modified, or a model is added or changed, update `docs/data-model.md` to reflect the current schema — columns, types, relationships, and any index or constraint changes.
+
+## Testing
+
+Write unit tests whenever new functionality is added — services, models, controllers, and any non-trivial logic. Use PHPUnit 12 via Artisan:
+
+```bash
+./vendor/bin/sail php artisan test
+```
+
+- Place feature tests in `tests/Feature/` and unit tests in `tests/Unit/`.
+- Use `RefreshDatabase` for tests that touch the database.
+- Test the happy path and key failure cases (validation errors, auth guards, missing records).
+
 ## Folder Structure Conventions
 
 | Path | Purpose |
