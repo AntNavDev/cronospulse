@@ -183,3 +183,41 @@ Ad-hoc example:
 ### Swapping the entire palette
 
 All color values are isolated to the `:root` and `[data-theme="dark"]` blocks in `app.css`. Variable names are stable — only the hex values need to change. No Blade or Livewire files need to be touched when swapping palettes.
+
+## Deployment
+
+Production runs on a DigitalOcean droplet managed with Docker Compose. Traefik routes inbound traffic to `cronospulse_nginx` via the external `proxy` network — see the global CLAUDE.md for the full per-site network topology.
+
+**Key files:**
+
+| File | Purpose |
+|---|---|
+| `docker-compose.prod.yml` | Production Compose config (app, scheduler, nginx, mysql, redis) |
+| `docker/php/Dockerfile` | PHP 8.5-FPM production image |
+| `docker/nginx/cronospulse.conf` | Nginx vhost config (gzip, try_files, PHP-FPM upstream) |
+| `.env.production.example` | All required env vars with comments — copy to `.env` on the server |
+| `deploy.sh` | One-shot deploy script (run from the project root on the droplet) |
+
+**First-time server setup:**
+1. Ensure the external `proxy` network exists: `docker network create proxy`
+2. Copy `.env.production.example` to `.env` and fill in all values
+3. `docker compose -f docker-compose.prod.yml up -d --build`
+4. Add a Traefik file provider rule routing `cronospulse.com` → `cronospulse_nginx` on the `proxy` network
+
+**Deploying updates:**
+
+```bash
+bash deploy.sh
+```
+
+The script:
+1. `git pull` — fetches latest code on the current branch
+2. `composer install --no-dev --optimize-autoloader` — inside the running app container
+3. `php artisan migrate --force` — runs pending migrations
+4. `php artisan config:cache && route:cache && view:cache` — warms the caches
+5. `npm ci && npm run build` — rebuilds front-end assets on the host
+6. `php artisan storage:link` — ensures the public storage symlink exists
+7. `docker compose restart app` — reloads PHP-FPM with the new code
+8. Prints a timestamped "Deploy complete" message
+
+> **Note:** `npm ci` and `npm run build` run on the host (the droplet). Node.js must be installed on the droplet.
