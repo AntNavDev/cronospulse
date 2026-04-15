@@ -53,7 +53,8 @@ class EarthquakeQuery
     private function __construct(
         private readonly float $latitude,
         private readonly float $longitude,
-    ) {}
+    ) {
+    }
 
     /**
      * Create a new EarthquakeQuery for the given centre point.
@@ -197,7 +198,7 @@ class EarthquakeQuery
 
         if (! in_array($orderby, $allowed, strict: true)) {
             throw new InvalidArgumentException(
-                "Invalid orderby value '{$orderby}'. Allowed: " . implode(', ', $allowed)
+                "Invalid orderby value '{$orderby}'. Allowed: " . implode(', ', $allowed),
             );
         }
 
@@ -220,13 +221,13 @@ class EarthquakeQuery
     {
         if ($this->maxradiuskm !== null && $this->maxradius !== null) {
             throw new InvalidArgumentException(
-                'Set maxradiuskm or maxradius — not both. The USGS API treats simultaneous use as undefined behaviour.'
+                'Set maxradiuskm or maxradius — not both. The USGS API treats simultaneous use as undefined behaviour.',
             );
         }
 
         if ($this->maxradiuskm === null && $this->maxradius === null) {
             throw new InvalidArgumentException(
-                'A radius is required. Call maxradiuskm() or maxradius() before toArray().'
+                'A radius is required. Call maxradiuskm() or maxradius() before toArray().',
             );
         }
 

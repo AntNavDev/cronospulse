@@ -22,11 +22,13 @@ CronosPulse (`cronospulse.com`) is a Laravel application that consumes the USGS 
 
 All PHP code must conform to PSR-12. Pint is configured in `pint.json` at the project root.
 
-**Run Pint before every commit:**
+**Run Pint after every PHP file you write or edit, and again before every commit:**
 
 ```bash
 ./vendor/bin/sail php ./vendor/bin/pint
 ```
+
+Do not wait until commit time — run Pint immediately after each file is written so formatting issues are caught before moving on.
 
 Key enforced rules beyond PSR-12 baseline: `declare_strict_types`, `no_unused_imports`, `ordered_imports` (alpha), `single_quote`, trailing commas in multi-line arrays/arguments, `single_blank_line_at_eof`.
 
