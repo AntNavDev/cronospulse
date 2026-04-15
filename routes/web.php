@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\RobotsController;
 use App\Livewire\Pages\About;
 use App\Livewire\Pages\Home;
+use App\Livewire\Pages\QuakeWatch;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::get('/', Home::class)->name('home');
 Route::get('/about', About::class)->name('about');
+Route::get('/quake-watch', QuakeWatch::class)->name('quake-watch');
 Route::get('/robots.txt', RobotsController::class)->name('robots');
 
 /*
