@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    {{-- Prevent flash of wrong theme --}}
+    {{-- Prevent flash of wrong theme before Alpine initialises.
+         Light is default (:root). Dark sets data-theme="dark". --}}
     <script>
         if (localStorage.theme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
@@ -19,23 +20,32 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-bg text-text antialiased flex flex-col items-center justify-center px-4 py-12">
+<body
+    class="min-h-screen bg-bg text-text antialiased"
+    x-data="{
+        theme: localStorage.getItem('theme') || 'light',
+        init() {
+            this.$watch('theme', val => {
+                localStorage.setItem('theme', val);
+                document.documentElement.setAttribute('data-theme', val === 'dark' ? 'dark' : '');
+            });
+            document.documentElement.setAttribute('data-theme', this.theme === 'dark' ? 'dark' : '');
+        },
+        toggle() { this.theme = this.theme === 'light' ? 'dark' : 'light'; },
+    }"
+>
+    <x-primary-nav />
 
-    <div class="w-full max-w-sm space-y-6">
+    <main class="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-12">
+        <div class="w-full max-w-sm space-y-6">
 
-        {{-- Logo --}}
-        <div class="text-center">
-            <a href="{{ route('home') }}" class="font-display text-2xl font-semibold tracking-tight hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] rounded-sm">
-                CronosPulse
-            </a>
+            {{-- Card --}}
+            <div class="rounded-xl border border-border bg-surface p-8 shadow-sm">
+                {{ $slot }}
+            </div>
+
         </div>
-
-        {{-- Card --}}
-        <div class="rounded-xl border border-border bg-surface p-8 shadow-sm">
-            {{ $slot }}
-        </div>
-
-    </div>
+    </main>
 
 </body>
 </html>
