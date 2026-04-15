@@ -59,7 +59,7 @@ This applies to **all** PHP files including test classes — every file must end
 ./vendor/bin/sail php artisan test
 ```
 
-The app container is named `cronospulse_app`. MySQL is forwarded to `127.0.0.1:3306`.
+MySQL is forwarded to `127.0.0.1:3306` for IDE database connections.
 
 ## Authentication Model
 
@@ -190,23 +190,22 @@ All color values are isolated to the `:root` and `[data-theme="dark"]` blocks in
 
 ## Deployment
 
-Production runs on a DigitalOcean droplet managed with Docker Compose. Traefik routes inbound traffic to `cronospulse_nginx` via the external `proxy` network — see the global CLAUDE.md for the full per-site network topology.
+Production runs on a DigitalOcean droplet managed with Docker Compose. Traefik handles inbound routing. See `CLAUDE.local.md` for server-specific details (container names, network topology, Traefik setup).
 
 **Key files:**
 
 | File | Purpose |
 |---|---|
 | `docker-compose.prod.yml` | Production Compose config (app, scheduler, nginx, mysql, redis) |
-| `docker/php/Dockerfile` | PHP 8.5-FPM production image |
+| `docker/php/Dockerfile` | PHP-FPM production image |
 | `docker/nginx/cronospulse.conf` | Nginx vhost config (gzip, try_files, PHP-FPM upstream) |
 | `.env.production.example` | All required env vars with comments — copy to `.env` on the server |
 | `deploy.sh` | One-shot deploy script (run from the project root on the droplet) |
 
 **First-time server setup:**
-1. Ensure the external `proxy` network exists: `docker network create proxy`
+1. See `CLAUDE.local.md` for network and Traefik setup steps
 2. Copy `.env.production.example` to `.env` and fill in all values
 3. `docker compose -f docker-compose.prod.yml up -d --build`
-4. Add a Traefik file provider rule routing `cronospulse.com` → `cronospulse_nginx` on the `proxy` network
 
 **Deploying updates:**
 

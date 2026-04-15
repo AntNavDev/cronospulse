@@ -6,14 +6,14 @@ Live at [cronospulse.com](https://cronospulse.com).
 
 ## Tech Stack
 
-- **PHP 8.5** / **Laravel 13**
-- **Livewire 4** + **Alpine.js** for reactive UI
-- **Tailwind CSS v4** via `@tailwindcss/vite`
-- **Chart.js ^4.4** for data visualisation
+- **PHP** / **Laravel**
+- **Livewire** + **Alpine.js** for reactive UI
+- **Tailwind CSS** via `@tailwindcss/vite`
+- **Chart.js** for data visualisation
 - **Leaflet.js** for maps
-- **MySQL 8.4** + **Redis**
-- **Vite 8** for asset bundling
-- **PHPUnit 12** for testing
+- **MySQL** + **Redis**
+- **Vite** for asset bundling
+- **PHPUnit** for testing
 
 ## Local Development
 
