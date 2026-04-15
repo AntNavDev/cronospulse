@@ -32,46 +32,38 @@ class QuakeWatch extends Component
     /**
      * Search for earthquakes within the given radius of a map point.
      *
-     * Called from Alpine via $wire.search(lat, lng, radius, unit).
+     * Called from Alpine via $wire.search(lat, lng, radius).
      *
-     * @param float  $latitude   Decimal degrees latitude of the search centre.
-     * @param float  $longitude  Decimal degrees longitude of the search centre.
-     * @param float  $radius     Radius value in the units specified by $radiusUnit.
-     * @param string $radiusUnit Either 'km' or 'degrees'.
+     * @param float $latitude  Decimal degrees latitude of the search centre.
+     * @param float $longitude Decimal degrees longitude of the search centre.
+     * @param float $radius    Search radius in kilometres.
      */
-    public function search(float $latitude, float $longitude, float $radius, string $radiusUnit): void
+    public function search(float $latitude, float $longitude, float $radius): void
     {
         $this->error = null;
         $this->earthquakes = null;
 
         if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) {
             $this->error = 'Invalid coordinates. Click a point on the map and try again.';
+            $this->dispatch('earthquakes-updated', earthquakes: []);
             return;
         }
 
         if ($radius <= 0) {
             $this->error = 'Radius must be greater than zero.';
-            return;
-        }
-
-        if (! in_array($radiusUnit, ['km', 'degrees'], strict: true)) {
-            $this->error = 'Invalid radius unit.';
+            $this->dispatch('earthquakes-updated', earthquakes: []);
             return;
         }
 
         try {
             $query = EarthquakeQuery::make($latitude, $longitude);
+            $query->maxradiuskm($radius);
 
-            if ($radiusUnit === 'km') {
-                $query->maxradiuskm($radius);
-            } else {
-                $query->maxradius($radius);
-            }
-
-            $response = (new USGSEarthquake())->query($query);
+            $response = new USGSEarthquake()->query($query);
 
             if (! $response->successful()) {
                 $this->error = 'The USGS API returned an error. Please try again.';
+                $this->dispatch('earthquakes-updated', earthquakes: []);
                 return;
             }
 
@@ -80,7 +72,13 @@ class QuakeWatch extends Component
                     $props = $feature['properties'];
                     $mag   = (float) ($props['mag'] ?? 0);
 
+                    // GeoJSON coordinates are [longitude, latitude, depth].
+                    $lng = (float) $feature['geometry']['coordinates'][0];
+                    $lat = (float) $feature['geometry']['coordinates'][1];
+
                     return [
+                        'lat'       => $lat,
+                        'lng'       => $lng,
                         'magnitude' => $mag,
                         'mag_class' => $this->magnitudeClass($mag),
                         'place'     => $props['place'] ?? '—',
@@ -98,6 +96,9 @@ class QuakeWatch extends Component
         } catch (Throwable) {
             $this->error = 'Failed to reach the USGS API. Please check your connection and try again.';
         }
+
+        // Always dispatch so the map clears stale markers from the previous search.
+        $this->dispatch('earthquakes-updated', earthquakes: $this->earthquakes ?? []);
     }
 
     /**

@@ -11,11 +11,12 @@
     until the user hits Search.
 
     Shared state (x-data on root):
-      lat, lng    — coordinates of the last map click (null until first click)
-      radius      — search radius value, bound to the input and forwarded to the map
-      unit        — 'km' or 'degrees'; controls which USGS parameter is sent
-      switchUnit  — converts the current radius value before changing the unit
-      dispatchRadius — sends meters to the map circle via map-radius-updated
+      lat, lng       — coordinates of the last map click (null until first click)
+      radius         — display value; kilometres when unit='km', miles when unit='mi'
+      unit           — 'km' or 'mi' (display only — the API always receives kilometres)
+      radiusKm       — getter that converts radius to km regardless of selected unit
+      switchUnit     — converts the display value when toggling units
+      dispatchRadius — sends metres to the map circle via map-radius-updated
 --}}
 <div
     x-data="{
@@ -24,26 +25,24 @@
         radius: 50,
         unit: 'km',
 
+        get radiusKm() {
+            return this.unit === 'mi'
+                ? this.radius / 0.621371
+                : this.radius;
+        },
+
         switchUnit(newUnit) {
             if (this.unit === newUnit) return;
-
-            if (newUnit === 'degrees') {
-                this.radius = Math.round(this.radius / 111.12 * 100) / 100;
-            } else {
-                this.radius = Math.round(this.radius * 111.12 * 10) / 10;
-            }
-
+            this.radius = this.unit === 'km'
+                ? Math.round(this.radius * 0.621371 * 10) / 10
+                : Math.round(this.radius / 0.621371 * 10) / 10;
             this.unit = newUnit;
             this.dispatchRadius();
         },
 
         dispatchRadius() {
-            const meters = this.unit === 'km'
-                ? this.radius * 1000
-                : this.radius * 111000;
-
             window.dispatchEvent(
-                new CustomEvent('map-radius-updated', { detail: { meters } })
+                new CustomEvent('map-radius-updated', { detail: { meters: this.radiusKm * 1000 } })
             );
         }
     }"
@@ -74,8 +73,8 @@
                 <input
                     id="quake-radius"
                     type="number"
-                    min="0.01"
-                    step="any"
+                    min="1"
+                    step="1"
                     placeholder="50"
                     x-model="radius"
                     @change="dispatchRadius()"
@@ -83,33 +82,30 @@
                 />
             </div>
 
-            {{-- Unit radio buttons --}}
-            <div>
-                <p class="mb-2 text-sm font-medium text-text">Radius unit</p>
-                <div class="flex gap-5">
-                    <label class="flex cursor-pointer items-center gap-2 text-sm text-text">
-                        <input
-                            type="radio"
-                            name="radius-unit"
-                            value="km"
-                            x-model="unit"
-                            @change="switchUnit('km')"
-                            class="accent-[var(--color-accent)]"
-                        />
-                        Kilometers
-                    </label>
-                    <label class="flex cursor-pointer items-center gap-2 text-sm text-text">
-                        <input
-                            type="radio"
-                            name="radius-unit"
-                            value="degrees"
-                            x-model="unit"
-                            @change="switchUnit('degrees')"
-                            class="accent-[var(--color-accent)]"
-                        />
-                        Degrees
-                    </label>
-                </div>
+            {{-- Unit toggle --}}
+            <div class="flex gap-5">
+                <label class="flex cursor-pointer items-center gap-2 text-sm text-text">
+                    <input
+                        type="radio"
+                        name="radius-unit"
+                        value="km"
+                        x-model="unit"
+                        @change="switchUnit('km')"
+                        class="accent-[var(--color-accent)]"
+                    />
+                    Kilometers
+                </label>
+                <label class="flex cursor-pointer items-center gap-2 text-sm text-text">
+                    <input
+                        type="radio"
+                        name="radius-unit"
+                        value="mi"
+                        x-model="unit"
+                        @change="switchUnit('mi')"
+                        class="accent-[var(--color-accent)]"
+                    />
+                    Miles
+                </label>
             </div>
 
             {{-- Selected location display --}}
@@ -148,7 +144,7 @@
             <button
                 type="button"
                 :disabled="lat === null"
-                @click="$wire.search(lat, lng, Number(radius), unit)"
+                @click="$wire.search(lat, lng, radiusKm)"
                 class="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 disabled:cursor-not-allowed disabled:opacity-40"
             >
                 <span wire:loading.remove wire:target="search">Search</span>
