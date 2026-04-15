@@ -1,27 +1,59 @@
-<x-layouts.guest>
-    <form method="POST" action="{{ route('login') }}">
+<x-layouts.guest title="Sign in">
+    <form method="POST" action="{{ route('login') }}" class="space-y-5" novalidate>
         @csrf
 
-        <div>
-            <label for="username">Username</label>
-            <input id="username" type="text" name="username" value="{{ old('username') }}" required autofocus autocomplete="username">
-            @error('username') <span>{{ $message }}</span> @enderror
+        <div class="space-y-1">
+            <x-input-label for="username" value="Username" />
+            <x-input
+                id="username"
+                name="username"
+                type="text"
+                :value="old('username')"
+                required
+                autofocus
+                autocomplete="username"
+                :class="$errors->has('username') ? 'border-[var(--color-danger)] focus:border-[var(--color-danger)] focus:ring-[var(--color-danger)]' : ''"
+                aria-describedby="{{ $errors->has('username') ? 'username-error' : '' }}"
+                :aria-invalid="$errors->has('username') ? 'true' : null"
+            />
+            <x-input-error id="username-error" :messages="$errors->get('username')" role="alert" />
         </div>
 
-        <div>
-            <label for="password">Password</label>
-            <input id="password" type="password" name="password" required>
-            @error('password') <span>{{ $message }}</span> @enderror
+        <div class="space-y-1">
+            <x-input-label for="password" value="Password" />
+            <x-input
+                id="password"
+                name="password"
+                type="password"
+                required
+                autocomplete="current-password"
+                :class="$errors->has('password') ? 'border-[var(--color-danger)] focus:border-[var(--color-danger)] focus:ring-[var(--color-danger)]' : ''"
+                aria-describedby="{{ $errors->has('password') ? 'password-error' : '' }}"
+                :aria-invalid="$errors->has('password') ? 'true' : null"
+            />
+            <x-input-error id="password-error" :messages="$errors->get('password')" role="alert" />
         </div>
 
-        <div>
-            <label>
-                <input type="checkbox" name="remember"> Remember me
-            </label>
+        <div class="flex items-center gap-2">
+            <input
+                id="remember"
+                type="checkbox"
+                name="remember"
+                class="rounded border-border text-accent focus-visible:ring-[var(--color-border-focus)]"
+            >
+            <label for="remember" class="text-sm text-muted">Remember me</label>
         </div>
 
-        <button type="submit">Log in</button>
+        <x-button type="submit" variant="primary" class="w-full">
+            Sign in
+        </x-button>
 
-        <a href="{{ route('register') }}">Create an account</a>
+        <p class="text-center text-sm text-muted">
+            Don't have an account?
+            <a href="{{ route('register') }}" class="font-medium text-[var(--color-text-link)] hover:text-[var(--color-text-link-hover)] underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] rounded-sm">
+                Create one
+            </a>
+        </p>
+
     </form>
 </x-layouts.guest>

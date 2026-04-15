@@ -26,58 +26,75 @@
 @endphp
 
 @if ($lastPage > 1)
-    <div class="flex items-center justify-center gap-1">
+    <nav aria-label="Pagination">
+        <div class="flex items-center justify-center gap-1">
 
-        {{-- Previous --}}
-        @if ($paginator->onFirstPage())
-            <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text-muted)] opacity-40 cursor-not-allowed select-none">
-                &larr;
-            </span>
-        @else
-            <a
-                href="{{ $paginator->previousPageUrl() }}"
-                wire:navigate
-                class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-sm text-[var(--color-text)] hover:bg-[var(--color-border)] transition-colors duration-150"
-            >
-                &larr;
-            </a>
-        @endif
-
-        {{-- Page numbers / ellipsis — always visible; pagination-bar handles mobile/desktop row separation --}}
-        @foreach ($pages as $page)
-            @if ($page === '...')
-                <span class="inline-flex items-center justify-center w-9 h-9 text-sm text-[var(--color-text-muted)] select-none">
-                    &hellip;
-                </span>
-            @elseif ($page === $currentPage)
-                <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent)] text-sm font-semibold text-[var(--color-text-on-accent)] select-none">
-                    {{ $page }}
+            {{-- Previous --}}
+            @if ($paginator->onFirstPage())
+                <span
+                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text-muted)] opacity-40 cursor-not-allowed select-none"
+                    aria-disabled="true"
+                    aria-label="Previous page"
+                >
+                    &larr;
                 </span>
             @else
                 <a
-                    href="{{ $paginator->url($page) }}"
+                    href="{{ $paginator->previousPageUrl() }}"
                     wire:navigate
-                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-sm text-[var(--color-text)] hover:bg-[var(--color-border)] transition-colors duration-150"
+                    aria-label="Previous page"
+                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-sm text-[var(--color-text)] hover:bg-[var(--color-border)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
                 >
-                    {{ $page }}
+                    &larr;
                 </a>
             @endif
-        @endforeach
 
-        {{-- Next --}}
-        @if ($paginator->hasMorePages())
-            <a
-                href="{{ $paginator->nextPageUrl() }}"
-                wire:navigate
-                class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-sm text-[var(--color-text)] hover:bg-[var(--color-border)] transition-colors duration-150"
-            >
-                &rarr;
-            </a>
-        @else
-            <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text-muted)] opacity-40 cursor-not-allowed select-none">
-                &rarr;
-            </span>
-        @endif
+            {{-- Page numbers / ellipsis — always visible; pagination-bar handles mobile/desktop row separation --}}
+            @foreach ($pages as $page)
+                @if ($page === '...')
+                    <span class="inline-flex items-center justify-center w-9 h-9 text-sm text-[var(--color-text-muted)] select-none" aria-hidden="true">
+                        &hellip;
+                    </span>
+                @elseif ($page === $currentPage)
+                    <span
+                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent)] text-sm font-semibold text-[var(--color-text-on-accent)] select-none"
+                        aria-current="page"
+                        aria-label="Page {{ $page }}, current"
+                    >
+                        {{ $page }}
+                    </span>
+                @else
+                    <a
+                        href="{{ $paginator->url($page) }}"
+                        wire:navigate
+                        aria-label="Page {{ $page }}"
+                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-sm text-[var(--color-text)] hover:bg-[var(--color-border)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+                    >
+                        {{ $page }}
+                    </a>
+                @endif
+            @endforeach
 
-    </div>
+            {{-- Next --}}
+            @if ($paginator->hasMorePages())
+                <a
+                    href="{{ $paginator->nextPageUrl() }}"
+                    wire:navigate
+                    aria-label="Next page"
+                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-sm text-[var(--color-text)] hover:bg-[var(--color-border)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+                >
+                    &rarr;
+                </a>
+            @else
+                <span
+                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text-muted)] opacity-40 cursor-not-allowed select-none"
+                    aria-disabled="true"
+                    aria-label="Next page"
+                >
+                    &rarr;
+                </span>
+            @endif
+
+        </div>
+    </nav>
 @endif

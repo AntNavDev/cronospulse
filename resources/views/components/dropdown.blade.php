@@ -28,8 +28,8 @@
 
 <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false" @click.outside="open = false">
 
-    {{-- Trigger --}}
-    <div @click="open = !open">
+    {{-- Trigger — the trigger slot button should ideally carry aria-haspopup="true" and :aria-expanded="open" --}}
+    <div @click="open = !open" role="none">
         {{ $trigger }}
     </div>
 
@@ -43,6 +43,7 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         class="absolute z-50 mt-1 {{ $width }} {{ $alignClass }} rounded-md border border-border bg-surface py-1 shadow-lg"
+        role="menu"
         @click="open = false"
     >
         {{ $content }}

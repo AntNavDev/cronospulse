@@ -30,12 +30,13 @@
 
 <div
     x-data="{ show: false }"
-    x-on:open-modal.window="$event.detail === '{{ $id }}' && (show = true)"
+    x-on:open-modal.window="if ($event.detail === '{{ $id }}') { show = true; $nextTick(() => $refs.panel.focus()); }"
     x-on:close-modal.window="$event.detail === '{{ $id }}' && (show = false)"
     x-show="show"
     class="fixed inset-0 z-50 flex items-center justify-center"
-    aria-modal="true"
     role="dialog"
+    aria-modal="true"
+    @if($title ?? false) aria-labelledby="{{ $id }}-title" @endif
 >
     {{-- Backdrop --}}
     <div
@@ -48,11 +49,14 @@
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
         @click="show = false"
+        aria-hidden="true"
     ></div>
 
     {{-- Panel --}}
     <div
-        class="relative w-full {{ $maxWidth }} mx-4 rounded-xl border border-border bg-surface shadow-xl"
+        x-ref="panel"
+        tabindex="-1"
+        class="relative w-full {{ $maxWidth }} mx-4 rounded-xl border border-border bg-surface shadow-xl focus:outline-none"
         x-show="show"
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0 translate-y-2 scale-95"
@@ -65,14 +69,14 @@
         {{-- Header --}}
         @if ($title ?? false)
             <div class="flex items-center justify-between border-b border-border px-6 py-4">
-                <h2 class="text-base font-semibold text-text">{{ $title }}</h2>
+                <h2 id="{{ $id }}-title" class="text-base font-semibold text-text">{{ $title }}</h2>
                 <button
                     type="button"
                     @click="show = false"
-                    class="rounded-md p-1 text-muted transition-colors hover:bg-surface-hover hover:text-text"
+                    class="rounded-md p-1 text-muted transition-colors hover:bg-surface-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
                     aria-label="Close"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>

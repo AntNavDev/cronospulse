@@ -1,7 +1,7 @@
 <button
     type="button"
     @click="toggle()"
-    class="rounded-md p-2 transition-colors hover:bg-[var(--color-surface-hover)]"
+    class="rounded-md p-2 transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
     :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
 >
     {{-- Sun icon — shown in dark mode --}}

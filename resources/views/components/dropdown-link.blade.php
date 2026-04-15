@@ -12,8 +12,9 @@
 @if ($href)
     <a
         href="{{ $href }}"
+        role="menuitem"
         {{ $attributes->merge([
-            'class' => 'block w-full px-4 py-2 text-left text-sm text-text transition-colors hover:bg-surface-hover',
+            'class' => 'block w-full px-4 py-2 text-left text-sm text-text transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:bg-surface-hover',
         ]) }}
     >
         {{ $slot }}
@@ -21,8 +22,9 @@
 @else
     <button
         type="button"
+        role="menuitem"
         {{ $attributes->merge([
-            'class' => 'block w-full px-4 py-2 text-left text-sm text-text transition-colors hover:bg-surface-hover',
+            'class' => 'block w-full px-4 py-2 text-left text-sm text-text transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:bg-surface-hover',
         ]) }}
     >
         {{ $slot }}

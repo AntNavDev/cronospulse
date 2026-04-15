@@ -25,6 +25,10 @@ Alpine.data('lineChart', (chartData = { labels: [], datasets: [] }) => ({
         });
     },
 
+    destroy() {
+        this.destroyChart();
+    },
+
     initChart() {
         this.chart = new Chart(this.$refs.canvas, {
             type: 'line',
