@@ -28,7 +28,9 @@ All PHP code must conform to PSR-12. Pint is configured in `pint.json` at the pr
 ./vendor/bin/sail php ./vendor/bin/pint
 ```
 
-Key enforced rules beyond PSR-12 baseline: `declare_strict_types`, `no_unused_imports`, `ordered_imports` (alpha), `single_quote`, trailing commas in multi-line arrays/arguments.
+Key enforced rules beyond PSR-12 baseline: `declare_strict_types`, `no_unused_imports`, `ordered_imports` (alpha), `single_quote`, trailing commas in multi-line arrays/arguments, `single_blank_line_at_eof`.
+
+This applies to **all** PHP files including test classes — every file must end with a single newline.
 
 ## Sail Commands Cheatsheet
 
