@@ -24,6 +24,8 @@
         lng: null,
         radius: 50,
         unit: 'km',
+        minMag: 0.0,
+        timezone: 'UTC',
 
         get radiusKm() {
             return this.unit === 'mi'
@@ -46,7 +48,7 @@
             );
         }
     }"
-    @map-clicked.window="lat = $event.detail.lat; lng = $event.detail.lng"
+    @map-clicked.window="lat = $event.detail.lat; lng = $event.detail.lng; timezone = $event.detail.timezone ?? 'UTC'"
 >
     <div class="mb-6">
         <h1 class="text-2xl font-semibold text-text">QuakeWatch</h1>
@@ -80,6 +82,24 @@
                     @change="dispatchRadius()"
                     class="no-spin w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-text placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20"
                 />
+            </div>
+
+            {{-- Minimum magnitude --}}
+            <div>
+                <label for="quake-min-mag" class="mb-1.5 block text-sm font-medium text-text">
+                    Earthquakes above this magnitude
+                </label>
+                <select
+                    id="quake-min-mag"
+                    x-model.number="minMag"
+                    class="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20"
+                >
+                    <option value="0">Any magnitude</option>
+                    @foreach (range(8, 80) as $step)
+                        @php $val = $step / 10; @endphp
+                        <option value="{{ $val }}">M {{ number_format($val, 1) }}+</option>
+                    @endforeach
+                </select>
             </div>
 
             {{-- Unit toggle --}}
@@ -146,7 +166,7 @@
             <button
                 type="button"
                 :disabled="lat === null"
-                @click="$wire.search(lat, lng, radiusKm)"
+                @click="$wire.search(lat, lng, radiusKm, minMag, timezone)"
                 class="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 disabled:cursor-not-allowed disabled:opacity-40"
             >
                 <span wire:loading.remove wire:target="search">Search</span>
@@ -175,31 +195,84 @@
         </div>
 
         {{-- No results --}}
-        @if ($earthquakes !== null && count($earthquakes) === 0)
+        @if ($paginator !== null && $paginator->total() === 0)
             <p class="text-sm text-muted">No earthquakes found for this location and radius.</p>
         @endif
 
         {{-- Results table --}}
-        @if ($earthquakes !== null && count($earthquakes) > 0)
+        @if ($paginator !== null && $paginator->total() > 0)
             <div wire:loading.remove wire:target="search">
                 <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
-                    {{ count($earthquakes) }} result{{ count($earthquakes) === 1 ? '' : 's' }} — times in UTC
+                    {{ $paginator->total() }} result{{ $paginator->total() === 1 ? '' : 's' }} — times in {{ $timezoneLabel }}
                 </p>
                 <div class="overflow-x-auto rounded-xl border border-border">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border bg-surface-sunken text-left">
-                                <th class="px-4 py-3 font-semibold text-muted">Mag</th>
+
+                                {{-- Sortable: Mag --}}
+                                <th class="px-4 py-3 font-semibold text-muted">
+                                    <button
+                                        type="button"
+                                        wire:click="sort('magnitude')"
+                                        class="flex items-center gap-1 hover:text-text"
+                                    >
+                                        Mag
+                                        <span class="font-normal opacity-60">
+                                            @if ($sortColumn === 'magnitude')
+                                                {{ $sortDirection === 'asc' ? '↑' : '↓' }}
+                                            @else
+                                                ↕
+                                            @endif
+                                        </span>
+                                    </button>
+                                </th>
+
                                 <th class="px-4 py-3 font-semibold text-muted">Location</th>
-                                <th class="px-4 py-3 font-semibold text-muted">Time (UTC)</th>
-                                <th class="px-4 py-3 font-semibold text-muted">Depth (km)</th>
+
+                                {{-- Sortable: Time --}}
+                                <th class="px-4 py-3 font-semibold text-muted">
+                                    <button
+                                        type="button"
+                                        wire:click="sort('time_ms')"
+                                        class="flex items-center gap-1 hover:text-text"
+                                    >
+                                        Time ({{ $timezoneLabel }})
+                                        <span class="font-normal opacity-60">
+                                            @if ($sortColumn === 'time_ms')
+                                                {{ $sortDirection === 'asc' ? '↑' : '↓' }}
+                                            @else
+                                                ↕
+                                            @endif
+                                        </span>
+                                    </button>
+                                </th>
+
+                                {{-- Sortable: Depth --}}
+                                <th class="px-4 py-3 font-semibold text-muted">
+                                    <button
+                                        type="button"
+                                        wire:click="sort('depth_km')"
+                                        class="flex items-center gap-1 hover:text-text"
+                                    >
+                                        Depth (km)
+                                        <span class="font-normal opacity-60">
+                                            @if ($sortColumn === 'depth_km')
+                                                {{ $sortDirection === 'asc' ? '↑' : '↓' }}
+                                            @else
+                                                ↕
+                                            @endif
+                                        </span>
+                                    </button>
+                                </th>
+
                                 <th class="px-4 py-3 font-semibold text-muted">Alert</th>
                                 <th class="px-4 py-3 font-semibold text-muted">Status</th>
                                 <th class="px-4 py-3"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border">
-                            @foreach ($earthquakes as $quake)
+                            @foreach ($paginator as $quake)
                                 <tr class="bg-surface transition hover:bg-surface-hover">
                                     <td class="px-4 py-3 font-mono font-semibold {{ $quake['mag_class'] }}">
                                         {{ number_format($quake['magnitude'], 1) }}
@@ -207,7 +280,7 @@
                                     <td class="px-4 py-3 text-text">
                                         {{ $quake['place'] }}
                                     </td>
-                                    <td class="px-4 py-3 font-mono text-muted">
+                                    <td class="px-4 py-3 text-muted">
                                         {{ $quake['time'] }}
                                     </td>
                                     <td class="px-4 py-3 font-mono text-muted">
@@ -247,6 +320,13 @@
                         </tbody>
                     </table>
                 </div>
+
+                <x-pagination-bar
+                    :paginator="$paginator"
+                    :per-page="$perPage"
+                    :options="[10, 20, 50, 100, 0]"
+                    :wire="true"
+                />
             </div>
         @endif
     </div>

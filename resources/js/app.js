@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import tzLookup from 'tz-lookup';
 
 /**
  * Register Alpine plugins and components inside alpine:init.
@@ -122,8 +123,12 @@ document.addEventListener('alpine:init', () => {
                 // Zoom to fit the circle with a small padding so it fills the viewport.
                 this.map.flyToBounds(this.circle.getBounds(), { padding: [24, 24] });
 
+                // Resolve the IANA timezone for the clicked coordinates so the
+                // results table can display local event times without a paid API.
+                const timezone = tzLookup(lat, lng);
+
                 window.dispatchEvent(new CustomEvent('map-clicked', {
-                    detail: { lat, lng },
+                    detail: { lat, lng, timezone },
                 }));
             });
 
