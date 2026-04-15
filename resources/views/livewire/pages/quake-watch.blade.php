@@ -34,8 +34,8 @@
         switchUnit(newUnit) {
             if (this.unit === newUnit) return;
             this.radius = this.unit === 'km'
-                ? Math.round(this.radius * 0.621371 * 10) / 10
-                : Math.round(this.radius / 0.621371 * 10) / 10;
+                ? Math.round(this.radius * 0.621371)
+                : Math.round(this.radius / 0.621371);
             this.unit = newUnit;
             this.dispatchRadius();
         },
@@ -83,13 +83,16 @@
             </div>
 
             {{-- Unit toggle --}}
+            {{-- Use :checked instead of x-model so switchUnit() owns the unit update.
+                 x-model + @change causes a race: x-model sets unit first, then @change
+                 fires switchUnit(), which sees this.unit already changed and bails early
+                 before converting the radius value. --}}
             <div class="flex gap-5">
                 <label class="flex cursor-pointer items-center gap-2 text-sm text-text">
                     <input
                         type="radio"
                         name="radius-unit"
-                        value="km"
-                        x-model="unit"
+                        :checked="unit === 'km'"
                         @change="switchUnit('km')"
                         class="accent-[var(--color-accent)]"
                     />
@@ -99,8 +102,7 @@
                     <input
                         type="radio"
                         name="radius-unit"
-                        value="mi"
-                        x-model="unit"
+                        :checked="unit === 'mi'"
                         @change="switchUnit('mi')"
                         class="accent-[var(--color-accent)]"
                     />
