@@ -10,7 +10,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
-#[Title('CronosPulse — Real-Time Geophysical Data')]
+#[Title('Real-Time Geophysical Data | CronosPulse')]
 class Home extends Component
 {
     /**

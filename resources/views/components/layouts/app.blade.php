@@ -13,8 +13,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? config('app.name') }}</title>
-    <meta name="description" content="{{ $description ?? 'Real-time geophysical data from USGS — earthquakes, streamflow, and water levels.' }}">
+    {{-- SEO — each page injects <x-seo> via <x-slot:seo>; falls back to bare app name --}}
+    @if ($seo->isEmpty())
+        <x-seo :title="$title ?? null" />
+    @else
+        {{ $seo }}
+    @endif
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

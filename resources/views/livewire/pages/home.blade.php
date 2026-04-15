@@ -1,3 +1,11 @@
+<x-slot:seo>
+    <x-seo
+        title="Real-Time Geophysical Data"
+        description="Live earthquake activity, streamflow levels, and water gauge readings across the United States — sourced directly from the U.S. Geological Survey."
+        :canonical="url('/')"
+    />
+</x-slot:seo>
+
 <div class="space-y-16">
 
     {{-- Hero --}}

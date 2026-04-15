@@ -10,7 +10,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
-#[Title('About — CronosPulse')]
+#[Title('About | CronosPulse')]
 class About extends Component
 {
     /**

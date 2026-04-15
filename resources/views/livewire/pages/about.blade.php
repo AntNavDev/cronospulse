@@ -1,3 +1,11 @@
+<x-slot:seo>
+    <x-seo
+        title="About"
+        description="CronosPulse is an open data visualisation tool built on USGS public APIs for earthquake activity, streamflow rates, and water level readings."
+        :canonical="url('/about')"
+    />
+</x-slot:seo>
+
 <div class="max-w-2xl space-y-8">
 
     <section class="space-y-4">
