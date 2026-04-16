@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Livewire\Pages;
 
 use App\Api\Queries\EarthquakeQuery;
-use App\Api\USGSEarthquake;
+use App\Services\EarthquakeService;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
+use Livewire\Attributes\Inject;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -20,6 +21,9 @@ use Throwable;
 class QuakeWatch extends Component
 {
     use WithPagination;
+
+    #[Inject]
+    protected EarthquakeService $earthquakeService;
 
     /**
      * Earthquake results. Null until the first search is run.
@@ -111,46 +115,18 @@ class QuakeWatch extends Component
                 $query->minmagnitude($minMagnitude);
             }
 
-            $response = new USGSEarthquake()->query($query);
-
-            if (! $response->successful()) {
-                $this->error = 'The USGS API returned an error. Please try again.';
-                $this->dispatch('earthquakes-updated', earthquakes: []);
-                return;
-            }
-
             // Use a throwaway Carbon instance to derive the short timezone abbreviation
             // (e.g. 'EST', 'PDT') displayed in the table header.
             $this->timezoneLabel = Carbon::now($this->timezone)->format('T');
 
-            $this->earthquakes = collect($response->json('features', []))
-                ->map(function (array $feature): array {
-                    $props  = $feature['properties'];
-                    $mag    = (float) ($props['mag'] ?? 0);
-                    $timeMs = (int) $props['time'];
-
-                    // GeoJSON coordinates are [longitude, latitude, depth].
-                    $lng = (float) $feature['geometry']['coordinates'][0];
-                    $lat = (float) $feature['geometry']['coordinates'][1];
-
-                    return [
-                        'lat'       => $lat,
-                        'lng'       => $lng,
-                        'magnitude' => $mag,
-                        'mag_class' => $this->magnitudeClass($mag),
-                        'place'     => $props['place'] ?? '—',
-                        // time_ms kept for stable client-side sorting (avoids re-parsing strings).
-                        'time_ms'   => $timeMs,
-                        'time'      => Carbon::createFromTimestampMs($timeMs)
-                            ->setTimezone($this->timezone)
-                            ->format('l g:ia, F jS, Y'),
-                        'depth_km'  => round((float) ($feature['geometry']['coordinates'][2] ?? 0), 1),
-                        'alert'     => $props['alert'],
-                        'status'    => $props['status'] ?? null,
-                        'url'       => $props['url'] ?? null,
-                    ];
-                })
-                ->values()
+            // The service returns normalised records without a formatted time string.
+            // We add it here because it depends on the component's active timezone.
+            $this->earthquakes = collect($this->earthquakeService->query($query))
+                ->map(fn (array $eq) => array_merge($eq, [
+                    'time' => Carbon::createFromTimestampMs($eq['time_ms'])
+                        ->setTimezone($this->timezone)
+                        ->format('l g:ia, F jS, Y'),
+                ]))
                 ->toArray();
 
             $this->applySorting();
@@ -212,20 +188,6 @@ class QuakeWatch extends Component
             $result = $a[$col] <=> $b[$col];
             return $asc ? $result : -$result;
         });
-    }
-
-    /**
-     * Return a Tailwind class string for the given magnitude value.
-     */
-    private function magnitudeClass(float $magnitude): string
-    {
-        return match (true) {
-            $magnitude >= 6.0 => 'text-danger font-bold',
-            $magnitude >= 5.0 => 'text-warning font-semibold',
-            $magnitude >= 4.0 => 'text-warning',
-            $magnitude >= 2.0 => 'text-text',
-            default           => 'text-muted',
-        };
     }
 
     /**
