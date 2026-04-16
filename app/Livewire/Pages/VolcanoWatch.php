@@ -106,6 +106,21 @@ class VolcanoWatch extends Component
     }
 
     /**
+     * Clear all filters and dispatch the full volcano list to the map.
+     *
+     * Called by the Reset map button so all state resets in a single round-trip
+     * rather than three separate property-set requests.
+     */
+    public function resetFilters(): void
+    {
+        $this->searchQuery  = '';
+        $this->regionFilter = '';
+        $this->alertFilter  = '';
+        $this->resetPage();
+        $this->dispatch('volcanoes-updated', volcanoes: $this->filteredVolcanoes());
+    }
+
+    /**
      * Update the per-page count and return to the first page.
      *
      * Called by the per-page selector component via wire:change.
