@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Pages;
 
+use App\Data\VolcanoData;
 use App\Services\VolcanoService;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -99,12 +100,14 @@ class VolcanoWatch extends Component
     }
 
     /**
-     * Fetch and normalise all USGS volcano records into $volcanoes via the service.
+     * Fetch all USGS volcano records via the service and store as arrays for Livewire state.
      */
     private function loadVolcanoes(): void
     {
         try {
-            $this->volcanoes = $this->volcanoService->all();
+            $this->volcanoes = $this->volcanoService->all()
+                ->map(fn (VolcanoData $v) => $v->toArray())
+                ->toArray();
         } catch (Throwable) {
             $this->error = 'Failed to reach the USGS Volcano API. Please check your connection and try again.';
         }
