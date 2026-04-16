@@ -6,8 +6,10 @@ namespace App\Providers;
 
 use App\Api\USGSEarthquake;
 use App\Api\USGSVolcano;
+use App\Api\USGSWaterServices;
 use App\Services\EarthquakeService;
 use App\Services\VolcanoService;
+use App\Services\WaterServicesService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,8 +21,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(USGSEarthquake::class);
         $this->app->singleton(USGSVolcano::class);
+        $this->app->singleton(USGSWaterServices::class);
         $this->app->singleton(EarthquakeService::class);
         $this->app->singleton(VolcanoService::class);
+        $this->app->singleton(WaterServicesService::class);
     }
 
     /**
