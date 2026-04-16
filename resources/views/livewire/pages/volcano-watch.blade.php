@@ -9,9 +9,11 @@
 {{--
     Alpine manages the map lifecycle client-side via the volcanoMap component.
     Initial markers are passed as JSON through x-data on first render.
-    Subsequent filter changes dispatch the 'volcanoes-updated' browser event
-    from Livewire, which the map picks up to refresh markers without a full
-    page reload.
+    Subsequent filter/search changes dispatch the 'volcanoes-updated' browser event
+    from Livewire, which the map picks up to refresh markers without a full page reload.
+
+    Name search is handled server-side via wire:model.live.debounce.300ms so it
+    applies before pagination (client-side x-show only filters the current page).
 --}}
 <div>
     <div class="mb-6">
@@ -21,15 +23,21 @@
         </p>
     </div>
 
+    {{-- Elevated Volcanoes summary card --}}
+    @if ($volcanoes !== null && ! $error)
+        <div class="mb-6">
+            <x-volcano-elevated-card :counts="$elevatedCounts" />
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-        {{-- Left column: filters + volcano list --}}
-        {{-- search is managed entirely client-side — no Livewire round-trip on keystroke --}}
-        <div class="space-y-5" x-data="{ search: '' }">
+        {{-- Left column: filters + volcano list + pagination --}}
+        <div class="space-y-5">
 
             {{-- Name search --}}
             <x-search-input
-                x-model="search"
+                wire:model.live.debounce.300ms="searchQuery"
                 placeholder="Search volcanoes…"
             />
 
@@ -87,24 +95,22 @@
                 @endforeach
             </div>
 
-            {{-- Result count — Alpine counts visible rows so it reflects the live name search --}}
+            {{-- Result count + reset map --}}
             @if ($volcanoes !== null && ! $error)
                 <div class="flex items-center justify-between">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-muted"
-                       x-text="
-                           (() => {
-                               const rows = $root.querySelectorAll('tbody tr');
-                               const visible = [...rows].filter(r => r.offsetParent !== null).length;
-                               return visible + ' ' + (visible === 1 ? 'volcano' : 'volcanoes') + (search ? ' — filtered' : '');
-                           })()
-                       "
-                    >
-                        {{ count($volcanoes) }} {{ count($volcanoes) === 1 ? 'volcano' : 'volcanoes' }}
+                    <p class="text-xs font-semibold uppercase tracking-wider text-muted">
+                        {{ $filteredCount }} {{ $filteredCount === 1 ? 'volcano' : 'volcanoes' }}
+                        @if ($searchQuery !== '' || $regionFilter !== '' || $alertFilter !== '')
+                            — filtered
+                        @endif
                     </p>
                     <button
                         type="button"
-                        class="text-xs text-accent hover:underline focus:outline-none cursor-pointer"
-                        @click="window.dispatchEvent(new CustomEvent('volcano-map-reset'))"
+                        class="cursor-pointer text-xs text-accent hover:underline focus:outline-none"
+                        @click="
+                            window.dispatchEvent(new CustomEvent('volcano-map-reset'));
+                            $wire.searchQuery = '';
+                        "
                     >
                         Reset map
                     </button>
@@ -112,12 +118,12 @@
             @endif
 
             {{-- No results --}}
-            @if ($volcanoes !== null && count($volcanoes) === 0 && ! $error)
+            @if ($volcanoes !== null && $filteredCount === 0 && ! $error)
                 <p class="text-sm text-muted">No volcanoes match the selected filters.</p>
             @endif
 
             {{-- Volcano list --}}
-            @if ($volcanoes !== null && count($volcanoes) > 0)
+            @if ($volcanoes !== null && $filteredCount > 0)
                 <div class="overflow-x-auto rounded-xl border border-border">
                     <table class="w-full text-sm">
                         <thead>
@@ -130,11 +136,9 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border">
-                            @foreach ($volcanoes as $volcano)
+                            @foreach ($paginator->items() as $volcano)
                                 <tr
                                     class="cursor-pointer bg-surface transition hover:bg-surface-hover"
-                                    data-name="{{ strtolower($volcano['name']) }}"
-                                    x-show="search === '' || $el.dataset.name.includes(search.toLowerCase())"
                                     x-on:click="window.dispatchEvent(new CustomEvent('volcano-selected', { detail: { vnum: '{{ $volcano['vnum'] }}' } }))"
                                 >
                                     <td class="px-4 py-3">
@@ -175,13 +179,43 @@
                         </tbody>
                     </table>
                 </div>
+
+                <x-pagination-bar
+                    :paginator="$paginator"
+                    :per-page="$perPage"
+                    :wire="true"
+                    :options="[10, 25, 50, 0]"
+                />
             @endif
 
         </div>
 
-        {{-- Right column: map --}}
-        <div class="sticky top-4">
-            <x-volcano-map id="volcano-map" height="600px" :initial-volcanoes="$volcanoes ?? []" />
+        {{-- Right column: map + alert level pie chart --}}
+        <div class="space-y-6">
+
+            <div class="sticky top-4 space-y-6">
+                <x-volcano-map id="volcano-map" height="500px" :initial-volcanoes="$volcanoes ?? []" />
+
+                {{-- Alert level breakdown pie chart — wire:ignore because the data never changes after mount --}}
+                @if ($volcanoes !== null && ! $error && count($chartData) > 0)
+                    <div wire:ignore class="rounded-xl border border-border bg-surface p-4">
+                        <h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-muted">
+                            Alert Level Breakdown
+                        </h3>
+                        <div
+                            x-data="pieChart({
+                                labels: @js($chartLabels),
+                                data: @js($chartData),
+                                colorVars: @js($chartColors)
+                            })"
+                            class="mx-auto max-w-xs"
+                        >
+                            <canvas x-ref="canvas"></canvas>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
         </div>
 
     </div>
