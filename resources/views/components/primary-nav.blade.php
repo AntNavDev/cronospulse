@@ -10,6 +10,7 @@
                 <x-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">Home</x-nav-link>
                 <x-nav-link href="{{ route('about') }}" :active="request()->routeIs('about')">About</x-nav-link>
                 <x-nav-link href="{{ route('quake-watch') }}" :active="request()->routeIs('quake-watch')">QuakeWatch</x-nav-link>
+                <x-nav-link href="{{ route('volcano-watch') }}" :active="request()->routeIs('volcano-watch')">VolcanoWatch</x-nav-link>
             </div>
         </div>
 
@@ -51,6 +52,7 @@
             <x-responsive-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">Home</x-responsive-nav-link>
             <x-responsive-nav-link href="{{ route('about') }}" :active="request()->routeIs('about')">About</x-responsive-nav-link>
             <x-responsive-nav-link href="{{ route('quake-watch') }}" :active="request()->routeIs('quake-watch')">QuakeWatch</x-responsive-nav-link>
+            <x-responsive-nav-link href="{{ route('volcano-watch') }}" :active="request()->routeIs('volcano-watch')">VolcanoWatch</x-responsive-nav-link>
             @auth
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
