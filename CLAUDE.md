@@ -83,6 +83,8 @@ The site is **public by default**. Authentication is optional and unlocks additi
 
 Whenever a migration is created or modified, or a model is added or changed, update `docs/data-model.md` to reflect the current schema — columns, types, relationships, and any index or constraint changes.
 
+Whenever architecture is introduced or changed — new layers, new patterns, new conventions, new config files, new directory purposes — update the relevant `CLAUDE.md` file immediately. If no `CLAUDE.md` exists for that directory yet, create one. The root `CLAUDE.md` folder structure table must always reflect the current state of the project.
+
 ## Testing
 
 Write unit tests whenever new functionality is added — services, models, controllers, and any non-trivial logic. Use PHPUnit 12 via Artisan:
@@ -99,12 +101,18 @@ Write unit tests whenever new functionality is added — services, models, contr
 
 | Path | Purpose |
 |---|---|
+| `app/Api/` | Raw API client classes (`USGSEarthquake`, `USGSVolcano`) extending `ApiConnection` |
+| `app/Api/Queries/` | Fluent query builder classes — one per API endpoint |
+| `app/Services/` | Application service classes that wrap API clients, transform data, and handle caching |
 | `app/Livewire/` | All Livewire component classes |
-| `resources/views/livewire/` | Blade views for Livewire components (mirror the class namespace, e.g. `app/Livewire/Earthquakes/Map.php` → `resources/views/livewire/earthquakes/map.blade.php`) |
+| `app/Livewire/Pages/` | Full-page Livewire components mounted directly to routes |
+| `app/Http/Controllers/` | Thin controllers; prefer Livewire full-page components for interactive pages |
+| `resources/views/livewire/` | Blade views for Livewire components (mirror the class namespace) |
 | `resources/js/app.js` | Alpine.js component registrations and JS entry point |
 | `resources/css/app.css` | Tailwind entry point — all theme tokens and color variables live here |
-| `app/Services/` | Service classes for USGS API calls and data transformation |
-| `app/Http/Controllers/` | Thin controllers; prefer Livewire full-page components for interactive pages |
+| `config/api.php` | Base URLs for all external APIs — reads from `.env` |
+
+See `app/Api/CLAUDE.md` and `app/Services/CLAUDE.md` for layer-specific conventions.
 
 ## Theme System
 

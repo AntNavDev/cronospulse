@@ -24,7 +24,11 @@ use Illuminate\Http\Client\Response;
  */
 class USGSVolcano extends ApiConnection
 {
-    protected string $baseUrl = 'https://volcanoes.usgs.gov/vsc/api/volcanoApi/';
+    public function __construct()
+    {
+        parent::__construct();
+        $this->baseUrl = config('api.usgs.volcano_url');
+    }
 
     /**
      * Retrieve current VHP status for all USGS-tracked volcanoes.
