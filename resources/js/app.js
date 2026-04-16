@@ -71,6 +71,75 @@ document.addEventListener('alpine:init', () => {
     }));
 
     /**
+     * Reusable Alpine.js component that renders a Chart.js doughnut (pie) chart.
+     *
+     * Usage:
+     *   <div x-data="pieChart({ labels: [...], data: [...], colorVars: [...] })">
+     *     <canvas x-ref="canvas"></canvas>
+     *   </div>
+     *
+     * chartData shape:
+     *   labels    — string[] display labels (one per slice)
+     *   data      — number[] slice values
+     *   colorVars — string[] CSS custom property names (e.g. '--color-danger') per slice.
+     *               Resolved at render time so they respect the active theme.
+     */
+    window.Alpine.data('pieChart', (chartData = { labels: [], data: [], colorVars: [] }) => ({
+        chart: null,
+
+        init() {
+            this.initChart();
+        },
+
+        destroy() {
+            if (this.chart) {
+                this.chart.destroy();
+                this.chart = null;
+            }
+        },
+
+        cssVar(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        },
+
+        initChart() {
+            const colors = chartData.colorVars.map((v) => this.cssVar(v));
+
+            this.chart = new Chart(this.$refs.canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        data: chartData.data,
+                        backgroundColor: colors,
+                        borderColor: this.cssVar('--color-surface'),
+                        borderWidth: 2,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: this.cssVar('--color-text-muted'),
+                                padding: 14,
+                                font: { size: 12 },
+                            },
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / ctx.dataset.data.reduce((a, b) => a + b, 0) * 100)}%)`,
+                            },
+                        },
+                    },
+                },
+            });
+        },
+    }));
+
+    /**
      * Reusable Alpine.js component that renders a clickable Leaflet map.
      *
      * Usage:

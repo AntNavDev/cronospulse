@@ -31,31 +31,38 @@ class VolcanoService
     /**
      * Retrieve all USGS-tracked volcanoes as a typed collection.
      *
+     * Raw API JSON is cached rather than serialized PHP objects. Caching object
+     * instances causes __PHP_Incomplete_Class errors when the class definition
+     * changes between cache writes and reads. Plain arrays are immune to this.
+     *
      * @return Collection<int, VolcanoData>
      *
      * @throws RuntimeException If the USGS Volcano API returns a non-successful response.
      */
     public function all(): Collection
     {
-        return Cache::remember('usgs.volcanoes.all', 300, function (): Collection {
+        /** @var array<int, array<string, mixed>> $raw */
+        $raw = Cache::remember('usgs.volcanoes.all', 300, function (): array {
             $response = $this->client->vhpStatus(VolcanoQuery::make());
 
             if (! $response->successful()) {
                 throw new RuntimeException('The USGS Volcano API returned an error.');
             }
 
-            return collect($response->json() ?? [])
-                ->map(fn (array $v): VolcanoData => new VolcanoData(
-                    vnum: (string) ($v['vnum'] ?? ''),
-                    name: $v['vName'] ?? '',
-                    region: $v['region'] ?? '',
-                    latitude: (float) ($v['lat'] ?? 0),
-                    longitude: (float) ($v['long'] ?? 0),
-                    alertLevel: $v['alertLevel'] ?? 'UNASSIGNED',
-                    colorCode: $v['colorCode'] ?? 'UNASSIGNED',
-                    synopsis: $v['noticeSynopsis'] ?? null,
-                    url: $v['vUrl'] ?? null,
-                ));
+            return $response->json() ?? [];
         });
+
+        return collect($raw)
+            ->map(fn (array $v): VolcanoData => new VolcanoData(
+                vnum: (string) ($v['vnum'] ?? ''),
+                name: $v['vName'] ?? '',
+                region: $v['region'] ?? '',
+                latitude: (float) ($v['lat'] ?? 0),
+                longitude: (float) ($v['long'] ?? 0),
+                alertLevel: $v['alertLevel'] ?? 'UNASSIGNED',
+                colorCode: $v['colorCode'] ?? 'UNASSIGNED',
+                synopsis: $v['noticeSynopsis'] ?? null,
+                url: $v['vUrl'] ?? null,
+            ));
     }
 }
