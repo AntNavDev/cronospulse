@@ -10,12 +10,12 @@ use Illuminate\Http\Client\Response;
 /**
  * API client for the USGS Volcano Hazards Program monitoring service.
  *
- * Base URL: https://volcanoes.usgs.gov/vsc/api/
+ * Base URL: https://volcanoes.usgs.gov/vsc/api/volcanoApi/
  *
- * Returns real-time monitoring data for all USGS-tracked US volcanoes,
- * including current ground alert levels, aviation color codes, and
- * activity descriptions. Coverage includes Hawaii, Alaska, the Cascades,
- * and other US territories.
+ * Returns real-time monitoring data for all USGS-tracked volcanoes including
+ * current ground alert levels, aviation color codes, coordinates, and the
+ * latest notice synopsis. Coverage includes Hawaii, Alaska, the Cascades,
+ * the Northern Mariana Islands, and other US territories.
  *
  * This API is public and does not require an API key. The parent constructor
  * accepts one for consistency, but it can be left null.
@@ -24,23 +24,23 @@ use Illuminate\Http\Client\Response;
  */
 class USGSVolcano extends ApiConnection
 {
-    protected string $baseUrl = 'https://volcanoes.usgs.gov/vsc/api/';
+    protected string $baseUrl = 'https://volcanoes.usgs.gov/vsc/api/volcanoApi/';
 
     /**
-     * Retrieve current monitoring data for USGS-tracked volcanoes.
+     * Retrieve current VHP status for all USGS-tracked volcanoes.
      *
-     * Returns the full list when no filters are set on the query.
-     * The API may return all records regardless of query parameters;
-     * callers should apply additional filtering on the response if needed.
+     * Returns a flat array of volcano objects including coordinates,
+     * alert level, aviation color code, and the latest notice synopsis.
+     * The API returns all records — filtering by region or alert level
+     * is applied in the caller rather than server-side.
      *
      * Example:
-     *   $response = (new USGSVolcano())->volcanoInfo(VolcanoQuery::make());
-     *   $response = (new USGSVolcano())->volcanoInfo(VolcanoQuery::make()->state('Alaska'));
+     *   $response = (new USGSVolcano())->vhpStatus(VolcanoQuery::make());
      *
      * @param VolcanoQuery $query Built query object. toArray() is handled internally.
      */
-    public function volcanoInfo(VolcanoQuery $query): Response
+    public function vhpStatus(VolcanoQuery $query): Response
     {
-        return $this->get('volcanoInfo', $query->toArray());
+        return $this->get('vhpstatus', $query->toArray());
     }
 }

@@ -9,14 +9,15 @@ use InvalidArgumentException;
 /**
  * Fluent builder for USGS Volcano Hazards Program API parameters.
  *
- * The volcanoInfo endpoint returns all USGS-monitored US volcanoes. Filtering
- * by state or alert level is optional — omit both to fetch the full list.
+ * The vhpstatus endpoint returns all USGS-monitored volcanoes. Filtering
+ * by region or alert level is optional — the API returns the full list
+ * regardless of params; any filtering is applied in the caller.
  * Call toArray() to produce the final parameter map for the HTTP request.
  *
  * Usage:
  *   VolcanoQuery::make()
- *       ->state('Hawaii')
- *       ->alertLevel('Watch')
+ *       ->region('Aleutians')
+ *       ->alertLevel('WATCH')
  *       ->toArray();
  */
 class VolcanoQuery
@@ -24,9 +25,9 @@ class VolcanoQuery
     /**
      * Valid USGS alert levels in ascending severity order.
      */
-    private const ALERT_LEVELS = ['Normal', 'Advisory', 'Watch', 'Warning'];
+    private const ALERT_LEVELS = ['NORMAL', 'ADVISORY', 'WATCH', 'WARNING'];
 
-    private ?string $state = null;
+    private ?string $region = null;
 
     private ?string $alertLevel = null;
 
@@ -43,13 +44,13 @@ class VolcanoQuery
     }
 
     /**
-     * Filter results to volcanoes in the given US state or territory.
+     * Filter results to volcanoes in the given USGS region.
      *
-     * @param string $state State name as returned by the USGS API (e.g. 'Hawaii', 'Alaska').
+     * @param string $region Region name as returned by the API (e.g. 'Aleutians', 'Hawaii').
      */
-    public function state(string $state): self
+    public function region(string $region): self
     {
-        $this->state = $state;
+        $this->region = $region;
 
         return $this;
     }
@@ -57,7 +58,7 @@ class VolcanoQuery
     /**
      * Filter results to volcanoes at the given USGS ground alert level.
      *
-     * Allowed values: 'Normal', 'Advisory', 'Watch', 'Warning'.
+     * Allowed values: 'NORMAL', 'ADVISORY', 'WATCH', 'WARNING'.
      *
      * @throws InvalidArgumentException If an unsupported alert level is given.
      */
@@ -78,15 +79,13 @@ class VolcanoQuery
      * Build and return the parameter array for the HTTP request.
      *
      * Strips null values — unset filters are omitted from the request.
-     * Note: the USGS Volcano API may return the full list regardless of params;
-     * server-side filtering support is not guaranteed.
      *
      * @return array<string, mixed>
      */
     public function toArray(): array
     {
         return array_filter([
-            'state'      => $this->state,
+            'region'     => $this->region,
             'alertLevel' => $this->alertLevel,
         ], fn ($value) => $value !== null);
     }
