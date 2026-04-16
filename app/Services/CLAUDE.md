@@ -18,18 +18,23 @@ Service classes in `app/Services/` sit between raw API clients (`app/Api/`) and 
 
 ## Injection into Livewire components
 
-Services are injected via Livewire's `#[Inject]` attribute. They are re-resolved from the container on every request, not serialised into component state:
+Services are injected via a `boot()` method, which Livewire calls on every lifecycle request (initial render and hydration). This avoids the "typed property must not be accessed before initialization" error that `#[Inject]` can trigger.
 
 ```php
 use App\Services\EarthquakeService;
-use Livewire\Attributes\Inject;
 
 class QuakeWatch extends Component
 {
-    #[Inject]
     protected EarthquakeService $earthquakeService;
+
+    public function boot(EarthquakeService $earthquakeService): void
+    {
+        $this->earthquakeService = $earthquakeService;
+    }
 }
 ```
+
+Do not use `#[Inject]` for services in this project. Do not inject via `mount()` — that only runs on initial render, so the property would be unset on subsequent Livewire requests.
 
 All services are registered as singletons in `AppServiceProvider` alongside their underlying API clients.
 
