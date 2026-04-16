@@ -29,7 +29,11 @@ use Illuminate\Http\Client\Response;
  */
 class USGSEarthquake extends ApiConnection
 {
-    protected string $baseUrl = 'https://earthquake.usgs.gov/fdsnws/event/1/';
+    public function __construct()
+    {
+        parent::__construct();
+        $this->baseUrl = config('api.usgs.earthquake_url');
+    }
 
     /**
      * Search for earthquakes matching the given query parameters.
