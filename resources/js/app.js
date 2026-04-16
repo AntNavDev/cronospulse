@@ -263,4 +263,193 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
+    /**
+     * Alpine.js component that renders a Leaflet map for VolcanoWatch.
+     *
+     * Unlike leafletMap (which is click-driven), volcanoMap is data-driven:
+     * it renders markers for all volcanoes passed in on init, then updates
+     * whenever Livewire dispatches a 'volcanoes-updated' browser event (e.g.
+     * after a state or alert level filter changes).
+     *
+     * Usage:
+     *   <div x-data="volcanoMap({ elementId: 'volcano-map', initialVolcanoes: [...] })">
+     *     <div id="volcano-map" style="height: 100%; width: 100%;"></div>
+     *   </div>
+     *
+     * Browser events listened for:
+     *   volcanoes-updated  → { detail: { volcanoes } }  filtered volcano array from Livewire
+     *   volcano-selected   → { detail: { vnum } }        zoom to marker and open its popup
+     */
+    window.Alpine.data('volcanoMap', ({ elementId, centerLat = 39.5, centerLng = -98.35, zoom = 4, initialVolcanoes = [] }) => ({
+        map: null,
+        markerLayer: null,
+        /** @type {Record<string, L.Marker>} Markers indexed by vnum for direct lookup. */
+        markers: {},
+        _volcanoListener: null,
+        _selectListener: null,
+        _resetListener: null,
+
+        init() {
+            this.map = L.map(elementId).setView([centerLat, centerLng], zoom);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 18,
+            }).addTo(this.map);
+
+            this.markerLayer = L.markerClusterGroup({ chunkedLoading: true });
+            this.map.addLayer(this.markerLayer);
+
+            // Render markers for the initial volcano set passed from Blade.
+            this.renderMarkers(initialVolcanoes);
+
+            // Listen for filter-driven updates dispatched by Livewire lifecycle hooks.
+            this._volcanoListener = (e) => {
+                this.renderMarkers(e.detail.volcanoes ?? []);
+            };
+
+            // Fly to a specific volcano and open its popup when a table row is clicked.
+            this._selectListener = (e) => {
+                const marker = this.markers[e.detail.vnum];
+                if (! marker) return;
+                // Fly to the marker's position at a close zoom so it's the clear focus.
+                // Open the popup once the animation finishes — doing it mid-flight causes
+                // it to anchor to the wrong screen position.
+                this.map.flyTo(marker.getLatLng(), 9, { duration: 0.8 });
+                this.map.once('moveend', () => marker.openPopup());
+            };
+
+            // Fly back to the initial center and zoom level.
+            this._resetListener = () => {
+                this.map.flyTo([centerLat, centerLng], zoom, { duration: 0.8 });
+            };
+
+            window.addEventListener('volcanoes-updated', this._volcanoListener);
+            window.addEventListener('volcano-selected', this._selectListener);
+            window.addEventListener('volcano-map-reset', this._resetListener);
+        },
+
+        /**
+         * Clear existing markers and render a fresh set for the given volcanoes.
+         *
+         * Each marker is a divIcon circle coloured by USGS alert level.
+         * Markers are stored in this.markers keyed by vnum for O(1) lookup
+         * when a table row is clicked.
+         */
+        renderMarkers(volcanoes) {
+            this.markerLayer.clearLayers();
+            this.markers = {};
+
+            volcanoes.forEach((volcano) => {
+                if (! volcano.latitude || ! volcano.longitude) return;
+
+                const color = this.alertLevelColor(volcano.alert_level);
+                const size  = 20;
+                const half  = size / 2;
+
+                const icon = L.divIcon({
+                    className: '',
+                    html: `<div style="
+                        width:${size}px;
+                        height:${size}px;
+                        border-radius:50%;
+                        background-color:${color};
+                        border:2.5px solid rgba(255,255,255,0.95);
+                        box-shadow:0 2px 6px rgba(0,0,0,0.4);
+                        opacity:0.95;
+                    "></div>`,
+                    iconSize: [size, size],
+                    iconAnchor: [half, half],
+                    popupAnchor: [0, -(half + 4)],
+                });
+
+                const marker = L.marker([volcano.latitude, volcano.longitude], { icon });
+                marker.bindPopup(this.popupContent(volcano), { minWidth: 220 });
+                this.markerLayer.addLayer(marker);
+
+                if (volcano.vnum) {
+                    this.markers[volcano.vnum] = marker;
+                }
+            });
+        },
+
+        /**
+         * Return a CSS color value for the given USGS ground alert level.
+         *
+         * Reads from CSS custom properties so it respects the active theme.
+         * Levels in ascending severity: NORMAL → ADVISORY → WATCH → WARNING.
+         */
+        alertLevelColor(alertLevel) {
+            switch (alertLevel) {
+                case 'WARNING':  return this.cssVar('--color-danger');
+                case 'WATCH':    return this.cssVar('--color-warning');
+                case 'ADVISORY': return this.cssVar('--color-info');
+                case 'NORMAL':   return this.cssVar('--color-success');
+                default:         return this.cssVar('--color-muted');
+            }
+        },
+
+        /**
+         * Read a CSS custom property value from the root element.
+         */
+        cssVar(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        },
+
+        /**
+         * Build the HTML string for a volcano marker popup.
+         *
+         * Inline styles are required — the popup lives in a Leaflet-managed
+         * DOM node outside Tailwind's scope.
+         */
+        popupContent(volcano) {
+            const esc = (str) => {
+                const d = document.createElement('div');
+                d.textContent = str ?? '';
+                return d.innerHTML;
+            };
+
+            const synopsis = volcano.synopsis
+                ? `<div style="margin-top:8px;font-size:12px;color:#6b7280;line-height:1.5;">${esc(volcano.synopsis)}</div>`
+                : '';
+
+            const link = volcano.url
+                ? `<div style="margin-top:8px;"><a href="${esc(volcano.url)}" target="_blank" rel="noopener noreferrer" style="color:#6366f1;font-size:12px;">View on USGS ↗</a></div>`
+                : '';
+
+            return `
+                <div style="font-family:sans-serif;font-size:13px;line-height:1.6;">
+                    <div style="font-size:16px;font-weight:700;margin-bottom:2px;">${esc(volcano.name)}</div>
+                    <div style="color:#6b7280;font-size:12px;margin-bottom:8px;">${esc(volcano.region)}</div>
+                    <table style="width:100%;border-collapse:collapse;font-size:12px;color:#6b7280;">
+                        <tr>
+                            <td style="padding:2px 8px 2px 0;">Alert level</td>
+                            <td style="text-align:right;font-weight:600;color:#111827;">${esc(volcano.alert_level)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:2px 8px 2px 0;">Aviation code</td>
+                            <td style="text-align:right;font-weight:600;color:#111827;">${esc(volcano.color_code)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:2px 8px 2px 0;">Lat / Lng</td>
+                            <td style="text-align:right;font-weight:600;color:#111827;">${volcano.latitude.toFixed(4)}, ${volcano.longitude.toFixed(4)}</td>
+                        </tr>
+                    </table>
+                    ${synopsis}
+                    ${link}
+                </div>
+            `;
+        },
+
+        destroy() {
+            window.removeEventListener('volcanoes-updated', this._volcanoListener);
+            window.removeEventListener('volcano-selected', this._selectListener);
+            window.removeEventListener('volcano-map-reset', this._resetListener);
+            if (this.map) {
+                this.map.remove();
+                this.map = null;
+            }
+        },
+    }));
+
 });
