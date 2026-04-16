@@ -24,3 +24,4 @@ DTO class names mirror the domain concept, not the API source: `EarthquakeData`,
 |---|---|---|
 | `EarthquakeData` | `EarthquakeService` | GeoJSON feature. `toArray(string $timezone)` includes formatted time. |
 | `VolcanoData` | `VolcanoService` | VHP status record. `toArray()` includes computed badge classes. |
+| `WaterServicesData` | `WaterServicesService` (pending) | One NWIS site × parameter time series. Holds latest reading value + datetime. `toArray(string $timezone)` includes formatted time and provisional flag. |

@@ -17,8 +17,9 @@ return [
     */
 
     'usgs' => [
-        'earthquake_url' => env('USGS_EARTHQUAKE_API_URL', 'https://earthquake.usgs.gov/fdsnws/event/1/'),
-        'volcano_url'    => env('USGS_VOLCANO_API_URL', 'https://volcanoes.usgs.gov/vsc/api/volcanoApi/'),
+        'earthquake_url'     => env('USGS_EARTHQUAKE_API_URL', 'https://earthquake.usgs.gov/fdsnws/event/1/'),
+        'volcano_url'        => env('USGS_VOLCANO_API_URL', 'https://volcanoes.usgs.gov/vsc/api/volcanoApi/'),
+        'water_services_url' => env('USGS_WATER_SERVICES_API_URL', 'https://waterservices.usgs.gov/nwis/iv/'),
     ],
 
 ];

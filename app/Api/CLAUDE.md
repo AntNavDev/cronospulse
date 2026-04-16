@@ -11,9 +11,11 @@ app/Api/
 ├── ApiConnection.php        # Abstract base class (shared HTTP client setup)
 ├── USGSEarthquake.php       # USGS FDSN Earthquake Catalog client
 ├── USGSVolcano.php          # USGS Volcano Hazards Program client
+├── USGSWaterServices.php    # USGS NWIS Instantaneous Values client
 └── Queries/
-    ├── EarthquakeQuery.php  # Fluent builder for earthquake query params
-    └── VolcanoQuery.php     # Fluent builder for volcano query params
+    ├── EarthquakeQuery.php      # Fluent builder for earthquake query params
+    ├── VolcanoQuery.php         # Fluent builder for volcano query params
+    └── WaterServicesQuery.php   # Fluent builder for NWIS IV query params
 ```
 
 ## ApiConnection base class
@@ -33,7 +35,7 @@ public function __construct()
 }
 ```
 
-**Never hardcode URLs in the class body.** All base URLs live in `config/api.php` and are read from environment variables (`USGS_EARTHQUAKE_API_URL`, `USGS_VOLCANO_API_URL`).
+**Never hardcode URLs in the class body.** All base URLs live in `config/api.php` and are read from environment variables (`USGS_EARTHQUAKE_API_URL`, `USGS_VOLCANO_API_URL`, `USGS_WATER_SERVICES_API_URL`).
 
 ## Naming conventions
 
@@ -60,4 +62,8 @@ Each fluent builder corresponds to one API operation. Rules:
 
 ## Authentication
 
-Both current USGS APIs are public — no API key is needed. Pass `null` (the default) to the parent constructor. The `$apiKey` mechanism exists for future authenticated services.
+All current USGS APIs are public — no API key is needed. Pass `null` (the default) to the parent constructor. The `$apiKey` mechanism exists for future authenticated services.
+
+## USGS Water Services note
+
+The NWIS IV API (`USGSWaterServices`) does not respect the `Accept: application/json` header. JSON output requires `format=json` as a query parameter — `WaterServicesQuery::toArray()` always injects this. The `buildClient()` `acceptJson()` call is harmless but has no effect on this endpoint.
