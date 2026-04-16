@@ -6,7 +6,6 @@ namespace App\Livewire\Pages;
 
 use App\Services\VolcanoService;
 use Illuminate\View\View;
-use Livewire\Attributes\Inject;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -16,8 +15,19 @@ use Throwable;
 #[Title('VolcanoWatch — US Volcano Monitoring | CronosPulse')]
 class VolcanoWatch extends Component
 {
-    #[Inject]
     protected VolcanoService $volcanoService;
+
+    /**
+     * Resolve the VolcanoService on every component lifecycle request.
+     *
+     * boot() is used instead of #[Inject] because it runs reliably on both
+     * initial render and Livewire hydration, avoiding "typed property must not
+     * be accessed before initialization" errors.
+     */
+    public function boot(VolcanoService $volcanoService): void
+    {
+        $this->volcanoService = $volcanoService;
+    }
 
     /**
      * All volcano records returned by the API. Null until mount() completes.

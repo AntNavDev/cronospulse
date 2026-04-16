@@ -9,7 +9,6 @@ use App\Services\EarthquakeService;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
-use Livewire\Attributes\Inject;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -22,8 +21,19 @@ class QuakeWatch extends Component
 {
     use WithPagination;
 
-    #[Inject]
     protected EarthquakeService $earthquakeService;
+
+    /**
+     * Resolve the EarthquakeService on every component lifecycle request.
+     *
+     * boot() is used instead of #[Inject] because it runs reliably on both
+     * initial render and Livewire hydration, avoiding "typed property must not
+     * be accessed before initialization" errors.
+     */
+    public function boot(EarthquakeService $earthquakeService): void
+    {
+        $this->earthquakeService = $earthquakeService;
+    }
 
     /**
      * Earthquake results. Null until the first search is run.
