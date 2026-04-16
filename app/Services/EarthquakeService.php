@@ -6,15 +6,16 @@ namespace App\Services;
 
 use App\Api\Queries\EarthquakeQuery;
 use App\Api\USGSEarthquake;
+use App\Data\EarthquakeData;
+use Illuminate\Support\Collection;
 use RuntimeException;
 
 /**
  * Application service for earthquake data.
  *
- * Wraps the raw USGSEarthquake API client and normalises GeoJSON feature
- * records into a consistent array shape for use in Livewire components and
- * other callers. Keeps timezone-specific time formatting out of scope —
- * callers receive time_ms and are responsible for localising the display.
+ * Wraps the raw USGSEarthquake API client and parses GeoJSON feature records
+ * into typed EarthquakeData objects. No GeoJSON handling occurs outside this
+ * class — callers always receive a typed collection.
  */
 class EarthquakeService
 {
@@ -26,19 +27,13 @@ class EarthquakeService
     }
 
     /**
-     * Query earthquakes and return normalised feature records.
+     * Query earthquakes and return a typed collection of results.
      *
-     * Each record contains: lat, lng, magnitude, mag_class, place,
-     * time_ms, depth_km, alert, status, url.
-     *
-     * time_ms is a Unix timestamp in milliseconds. Callers are responsible
-     * for converting it to a localised display string.
-     *
-     * @return list<array<string, mixed>>
+     * @return Collection<int, EarthquakeData>
      *
      * @throws RuntimeException If the USGS API returns a non-successful response.
      */
-    public function query(EarthquakeQuery $query): array
+    public function query(EarthquakeQuery $query): Collection
     {
         $response = $this->client->query($query);
 
@@ -47,41 +42,22 @@ class EarthquakeService
         }
 
         return collect($response->json('features', []))
-            ->map(function (array $feature): array {
-                $props  = $feature['properties'];
-                $mag    = (float) ($props['mag'] ?? 0);
-                $timeMs = (int) $props['time'];
-                $lng    = (float) $feature['geometry']['coordinates'][0];
-                $lat    = (float) $feature['geometry']['coordinates'][1];
+            ->map(function (array $feature): EarthquakeData {
+                $props = $feature['properties'];
+                $lng   = (float) $feature['geometry']['coordinates'][0];
+                $lat   = (float) $feature['geometry']['coordinates'][1];
 
-                return [
-                    'lat'       => $lat,
-                    'lng'       => $lng,
-                    'magnitude' => $mag,
-                    'mag_class' => $this->magnitudeClass($mag),
-                    'place'     => $props['place'] ?? '—',
-                    'time_ms'   => $timeMs,
-                    'depth_km'  => round((float) ($feature['geometry']['coordinates'][2] ?? 0), 1),
-                    'alert'     => $props['alert'] ?? null,
-                    'status'    => $props['status'] ?? null,
-                    'url'       => $props['url'] ?? null,
-                ];
-            })
-            ->values()
-            ->toArray();
-    }
-
-    /**
-     * Return a Tailwind class string for the given magnitude value.
-     */
-    private function magnitudeClass(float $magnitude): string
-    {
-        return match (true) {
-            $magnitude >= 6.0 => 'text-danger font-bold',
-            $magnitude >= 5.0 => 'text-warning font-semibold',
-            $magnitude >= 4.0 => 'text-warning',
-            $magnitude >= 2.0 => 'text-text',
-            default           => 'text-muted',
-        };
+                return new EarthquakeData(
+                    lat: $lat,
+                    lng: $lng,
+                    magnitude: (float) ($props['mag'] ?? 0),
+                    place: $props['place'] ?? '—',
+                    timeMs: (int) $props['time'],
+                    depthKm: round((float) ($feature['geometry']['coordinates'][2] ?? 0), 1),
+                    alert: $props['alert'] ?? null,
+                    status: $props['status'] ?? null,
+                    url: $props['url'] ?? null,
+                );
+            });
     }
 }

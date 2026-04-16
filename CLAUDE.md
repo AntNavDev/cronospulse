@@ -103,7 +103,8 @@ Write unit tests whenever new functionality is added — services, models, contr
 |---|---|
 | `app/Api/` | Raw API client classes (`USGSEarthquake`, `USGSVolcano`) extending `ApiConnection` |
 | `app/Api/Queries/` | Fluent query builder classes — one per API endpoint |
-| `app/Services/` | Application service classes that wrap API clients, transform data, and handle caching |
+| `app/Data/` | Readonly DTO classes — typed value objects returned by service classes |
+| `app/Services/` | Application service classes that wrap API clients, parse responses into DTOs, and handle caching |
 | `app/Livewire/` | All Livewire component classes |
 | `app/Livewire/Pages/` | Full-page Livewire components mounted directly to routes |
 | `app/Http/Controllers/` | Thin controllers; prefer Livewire full-page components for interactive pages |

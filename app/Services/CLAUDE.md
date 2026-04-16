@@ -11,10 +11,10 @@ Service classes in `app/Services/` sit between raw API clients (`app/Api/`) and 
 
 ## Current services
 
-| Class | Wraps | Caching |
-|---|---|---|
-| `EarthquakeService` | `USGSEarthquake` | None — parameterized search |
-| `VolcanoService` | `USGSVolcano` | `Cache::remember('usgs.volcanoes.all', 300)` — full dataset, no params |
+| Class | Wraps | Returns | Caching |
+|---|---|---|---|
+| `EarthquakeService` | `USGSEarthquake` | `Collection<int, EarthquakeData>` | None — parameterized search |
+| `VolcanoService` | `USGSVolcano` | `Collection<int, VolcanoData>` | `Cache::remember('usgs.volcanoes.all', 300)` — full dataset, no params |
 
 ## Injection into Livewire components
 
@@ -54,10 +54,10 @@ Do not return `null` or empty arrays on failure — throw so the component can d
 
 ## Data transformation rules
 
-- Normalise all API field names to `snake_case`.
-- Cast all numeric fields explicitly (`(float)`, `(int)`) — don't trust API types.
-- Include display-helper fields (e.g. `mag_class`, `alert_class`) computed from the data — keep Blade templates logic-free.
-- **Do not** include display fields that depend on runtime state unavailable to the service (e.g. user timezone). Return raw values (like `time_ms`) and let the component format them.
+- Services parse raw API responses into typed DTO objects from `app/Data/`. No raw array shapes leak beyond the service boundary.
+- Cast all numeric fields explicitly (`(float)`, `(int)`) — don't trust API types. Do this in the service constructor call, not in the DTO.
+- Display helpers (e.g. `magClass()`, `alertClass()`) live on the DTO as methods, derived from its own data.
+- **Do not** put display logic that depends on runtime state (e.g. user timezone) into the service or DTO constructor. Pass runtime context as a parameter to DTO methods (e.g. `$eq->formattedTime($timezone)`) or to `toArray($timezone)`.
 
 ## Adding a new service
 

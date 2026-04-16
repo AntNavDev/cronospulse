@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Pages;
 
 use App\Api\Queries\EarthquakeQuery;
+use App\Data\EarthquakeData;
 use App\Services\EarthquakeService;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -129,14 +130,8 @@ class QuakeWatch extends Component
             // (e.g. 'EST', 'PDT') displayed in the table header.
             $this->timezoneLabel = Carbon::now($this->timezone)->format('T');
 
-            // The service returns normalised records without a formatted time string.
-            // We add it here because it depends on the component's active timezone.
-            $this->earthquakes = collect($this->earthquakeService->query($query))
-                ->map(fn (array $eq) => array_merge($eq, [
-                    'time' => Carbon::createFromTimestampMs($eq['time_ms'])
-                        ->setTimezone($this->timezone)
-                        ->format('l g:ia, F jS, Y'),
-                ]))
+            $this->earthquakes = $this->earthquakeService->query($query)
+                ->map(fn (EarthquakeData $eq) => $eq->toArray($this->timezone))
                 ->toArray();
 
             $this->applySorting();
