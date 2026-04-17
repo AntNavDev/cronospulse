@@ -228,9 +228,7 @@ The script:
 2. `composer install --no-dev --optimize-autoloader` — inside the running app container
 3. `php artisan migrate --force` — runs pending migrations
 4. `php artisan config:cache && route:cache && view:cache` — warms the caches
-5. `npm ci && npm run build` — rebuilds front-end assets on the host
+5. `npm ci && npm run build` — rebuilds front-end assets inside the app container
 6. `php artisan storage:link` — ensures the public storage symlink exists
 7. `docker compose restart app` — reloads PHP-FPM with the new code
 8. Prints a timestamped "Deploy complete" message
-
-> **Note:** `npm ci` and `npm run build` run on the host (the droplet). Node.js must be installed on the droplet.
