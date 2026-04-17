@@ -14,6 +14,9 @@
         </p>
     </div>
 
+    {{-- National major flood alerts banner --}}
+    @livewire('hydro.national-flood-alerts')
+
     {{-- Active flood alerts map --}}
     <div class="mb-10">
         @livewire('hydro.flood-alerts')

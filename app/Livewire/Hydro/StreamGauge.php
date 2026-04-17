@@ -223,7 +223,7 @@ class StreamGauge extends Component
             $this->sites = [];
         }
 
-        $this->dispatch('stream-gauges-updated', sites: $this->sites ?? [], fitBounds: $fitBounds);
+        $this->dispatch('stream-gauges-updated', sites: $this->sites ?? [], fitBounds: $fitBounds, stateCd: $this->stateCd);
     }
 
     /**
