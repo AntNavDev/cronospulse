@@ -43,7 +43,7 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 scale-100"
                         x-transition:leave-end="opacity-0 scale-95"
-                        class="absolute right-0 mt-1 w-44 origin-top-right rounded-xl border border-border bg-surface shadow-lg"
+                        class="absolute right-0 z-50 mt-1 w-44 origin-top-right rounded-xl border border-border bg-surface shadow-lg"
                     >
                         <div class="p-1">
                             <a
