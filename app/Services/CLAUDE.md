@@ -16,6 +16,7 @@ Service classes in `app/Services/` sit between raw API clients (`app/Api/`) and 
 | `EarthquakeService` | `USGSEarthquake` | `Collection<int, EarthquakeData>` | None — parameterized search |
 | `VolcanoService` | `USGSVolcano` | `Collection<int, VolcanoData>` | `Cache::remember('usgs.volcanoes.all', 300)` — full dataset, no params |
 | `WaterServicesService` | `USGSWaterServices` | `Collection<int, WaterServicesData>` | None — parameterized by site/parameter/window |
+| `NWSAlertsService` | `NWSAlerts` | `Collection<int, FloodAlertData>` | None — highly time-sensitive, parameterized by area |
 
 ## Injection into Livewire components
 
