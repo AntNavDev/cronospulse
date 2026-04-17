@@ -5,10 +5,9 @@ services:
             context: .
             dockerfile: docker/php/Dockerfile
         restart: unless-stopped
-        environment:
-            APP_ENV: production
+        working_dir: /var/www/html
         volumes:
-            - 'cronospulse_storage:/var/www/html/storage'
+            - .:/var/www/html
         networks:
             - cronospulse_network
         depends_on:
@@ -23,20 +22,21 @@ services:
             context: .
             dockerfile: docker/php/Dockerfile
         restart: unless-stopped
-        command: php artisan schedule:work
+        command: ["php", "artisan", "schedule:work"]
         volumes:
-            - 'cronospulse_storage:/var/www/html/storage'
+            - .:/var/www/html
         networks:
             - cronospulse_network
         depends_on:
-            - app
+            mysql:
+                condition: service_healthy
 
     nginx:
         container_name: cronospulse_nginx
         image: 'nginx:alpine'
         restart: unless-stopped
         volumes:
-            - './public:/var/www/html/public:ro'
+            - .:/var/www/html:ro
             - './docker/nginx/cronospulse.conf:/etc/nginx/conf.d/default.conf:ro'
         networks:
             - cronospulse_network
@@ -50,40 +50,34 @@ services:
         restart: unless-stopped
         environment:
             MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
-            MYSQL_ROOT_HOST: '%'
             MYSQL_DATABASE: '${DB_DATABASE}'
             MYSQL_USER: '${DB_USERNAME}'
             MYSQL_PASSWORD: '${DB_PASSWORD}'
-            MYSQL_ALLOW_EMPTY_PASSWORD: 0
         volumes:
             - 'cronospulse_mysql_data:/var/lib/mysql'
             - './docker/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf:ro'
         networks:
             - cronospulse_network
         healthcheck:
-            test:
-                - CMD
-                - mysqladmin
-                - ping
-                - '-p${DB_PASSWORD}'
-            retries: 3
+            test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
+            retries: 5
             timeout: 5s
+            interval: 10s
 
     redis:
         container_name: cronospulse_redis
-        image: 'redis:alpine'
+        image: 'redis:7-alpine'
         restart: unless-stopped
+        command: redis-server --appendonly yes
         volumes:
             - 'cronospulse_redis_data:/data'
         networks:
             - cronospulse_network
         healthcheck:
-            test:
-                - CMD
-                - redis-cli
-                - ping
+            test: ["CMD", "redis-cli", "ping"]
             retries: 3
             timeout: 5s
+            interval: 10s
 
 networks:
     cronospulse_network:
@@ -96,6 +90,4 @@ volumes:
     cronospulse_mysql_data:
         driver: local
     cronospulse_redis_data:
-        driver: local
-    cronospulse_storage:
         driver: local

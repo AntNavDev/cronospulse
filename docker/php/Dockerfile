@@ -31,12 +31,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # PHP production config
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-COPY . /var/www/html
-
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
-
-RUN chown -R www-data:www-data /var/www/html
-
 USER www-data
 
 EXPOSE 9000
