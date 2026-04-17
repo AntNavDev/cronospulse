@@ -160,6 +160,7 @@ document.addEventListener('alpine:init', () => {
         markerLayer: null,
         radiusMeters: 50 * 1000, // default 50 km in metres
         _radiusListener: null,
+        _locationListener: null,
         _earthquakeListener: null,
 
         init() {
@@ -214,6 +215,27 @@ document.addEventListener('alpine:init', () => {
                 }
             };
 
+            // Place (or move) the circle at the given coordinates and zoom to it.
+            // Used when pre-populating the map from a saved search re-run, where
+            // there is no map-click event to create the circle automatically.
+            this._locationListener = (e) => {
+                const { lat, lng, meters } = e.detail;
+                if (!lat || !lng) return;
+                if (meters) this.radiusMeters = Number(meters);
+                if (this.circle) {
+                    this.circle.setLatLng([lat, lng]).setRadius(this.radiusMeters);
+                } else {
+                    this.circle = L.circle([lat, lng], {
+                        radius: this.radiusMeters,
+                        color: 'var(--color-accent)',
+                        fillColor: 'var(--color-accent)',
+                        fillOpacity: 0.15,
+                        weight: 2,
+                    }).addTo(this.map);
+                }
+                this.map.flyToBounds(this.circle.getBounds(), { padding: [24, 24] });
+            };
+
             // Listen for earthquake data from Livewire. Clears stale markers
             // on every search, including when results are empty or an error occurred.
             this._earthquakeListener = (e) => {
@@ -221,6 +243,7 @@ document.addEventListener('alpine:init', () => {
             };
 
             window.addEventListener('map-radius-updated', this._radiusListener);
+            window.addEventListener('map-location-set', this._locationListener);
             window.addEventListener('earthquakes-updated', this._earthquakeListener);
         },
 
@@ -324,6 +347,7 @@ document.addEventListener('alpine:init', () => {
 
         destroy() {
             window.removeEventListener('map-radius-updated', this._radiusListener);
+            window.removeEventListener('map-location-set', this._locationListener);
             window.removeEventListener('earthquakes-updated', this._earthquakeListener);
             if (this.map) {
                 this.map.remove();

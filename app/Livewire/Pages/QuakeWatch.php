@@ -37,6 +37,53 @@ class QuakeWatch extends Component
     }
 
     /**
+     * Pre-populated coordinates from URL params (set by mount).
+     * Passed to Alpine as initial x-data values so the controls reflect
+     * the saved search before the auto-triggered search fires.
+     */
+    public ?float $initialLat = null;
+
+    public ?float $initialLng = null;
+
+    public float $initialRadius = 50.0;
+
+    public float $initialMinMag = 0.0;
+
+    /**
+     * Inline save form: the name typed by the user before saving.
+     */
+    public string $saveName = '';
+
+    /**
+     * Flash message shown after a save attempt (success or error).
+     */
+    public ?string $saveMessage = null;
+
+    /**
+     * Whether the last save attempt succeeded (controls message colour).
+     */
+    public bool $saveSuccess = false;
+
+    /**
+     * Pre-populate from URL params when arriving via a dashboard "Re-run" link.
+     *
+     * The actual search is triggered client-side by Alpine's x-init so the map
+     * has time to initialise its event listeners before results are dispatched.
+     */
+    public function mount(): void
+    {
+        $lat = request()->query('lat');
+        $lng = request()->query('lng');
+
+        if ($lat !== null && $lng !== null) {
+            $this->initialLat    = (float) $lat;
+            $this->initialLng    = (float) $lng;
+            $this->initialRadius = (float) request()->query('radius', 50.0);
+            $this->initialMinMag = (float) request()->query('minMag', 0.0);
+        }
+    }
+
+    /**
      * Earthquake results. Null until the first search is run.
      *
      * @var list<array<string, mixed>>|null
@@ -175,6 +222,58 @@ class QuakeWatch extends Component
     {
         $this->perPage = $value;
         $this->resetPage();
+    }
+
+    /**
+     * Save the current search parameters under a user-supplied name.
+     *
+     * Called from the auth-gated save form in the view.
+     * Limited to 20 saved searches per user to prevent runaway growth.
+     *
+     * @param float $lat       Latitude of the search centre.
+     * @param float $lng       Longitude of the search centre.
+     * @param float $radiusKm  Search radius in kilometres.
+     * @param float $minMag    Minimum magnitude filter (0.0 = any).
+     */
+    public function saveSearch(float $lat, float $lng, float $radiusKm, float $minMag): void
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return;
+        }
+
+        $name = trim($this->saveName);
+
+        if ($name === '') {
+            $this->saveMessage = 'Please enter a name for this search.';
+            $this->saveSuccess = false;
+            return;
+        }
+
+        if (mb_strlen($name) > 100) {
+            $this->saveMessage = 'Name must be 100 characters or fewer.';
+            $this->saveSuccess = false;
+            return;
+        }
+
+        if ($user->savedEarthquakeSearches()->count() >= 20) {
+            $this->saveMessage = 'You have reached the 20 saved search limit. Delete one to add more.';
+            $this->saveSuccess = false;
+            return;
+        }
+
+        $user->savedEarthquakeSearches()->create([
+            'name'          => $name,
+            'latitude'      => $lat,
+            'longitude'     => $lng,
+            'radius_km'     => $radiusKm,
+            'min_magnitude' => $minMag,
+        ]);
+
+        $this->saveName    = '';
+        $this->saveMessage = "Search \"{$name}\" saved.";
+        $this->saveSuccess = true;
     }
 
     /**

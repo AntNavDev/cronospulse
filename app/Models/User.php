@@ -54,4 +54,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(SavedStation::class);
     }
+
+    /**
+     * @return HasMany<SavedEarthquakeSearch, $this>
+     */
+    public function savedEarthquakeSearches(): HasMany
+    {
+        return $this->hasMany(SavedEarthquakeSearch::class);
+    }
 }

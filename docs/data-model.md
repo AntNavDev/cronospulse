@@ -8,13 +8,15 @@ This document covers every table, every column, and how the models relate to eac
 
 ```
 users
- └── saved_stations (user_id) ──► usgs_stations
-                                       └── station_readings (station_id)
+ ├── saved_stations (user_id) ──► usgs_stations
+ │                                    └── station_readings (station_id)
+ └── saved_earthquake_searches (user_id)
 
 earthquakes  (standalone — no foreign keys)
 ```
 
 - A **user** can bookmark many **USGS stations** via `saved_stations`.
+- A **user** can save up to 20 named earthquake searches via `saved_earthquake_searches`.
 - A **USGS station** has many time-series **readings** (streamflow, water level, etc.).
 - **Earthquakes** are independent seismic events with no station relationship.
 
@@ -151,11 +153,35 @@ User bookmarks. Allows a user to follow specific USGS stations and surface them 
 
 ---
 
+### `saved_earthquake_searches`
+
+Named earthquake search bookmarks. Stores the map-click parameters so a user can re-run a QuakeWatch search from their dashboard.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `bigint unsigned` | Primary key |
+| `user_id` | `bigint unsigned` | Foreign key → `users.id` (cascade delete) |
+| `name` | `varchar(100)` | User-supplied label, e.g. `Bay Area M3+` |
+| `latitude` | `decimal(10,7)` | Search centre latitude |
+| `longitude` | `decimal(10,7)` | Search centre longitude |
+| `radius_km` | `decimal(8,2)` | Search radius in kilometres |
+| `min_magnitude` | `decimal(3,1)` | Minimum magnitude filter. `0.0` = any magnitude. Default `0.0`. |
+| `created_at` | `timestamp` | — |
+| `updated_at` | `timestamp` | — |
+
+**Constraint:** max 20 rows per user (enforced in `QuakeWatch::saveSearch()`, not at the DB level).
+
+**Model:** `App\Models\SavedEarthquakeSearch`
+**Relationships:**
+- `user()` → `BelongsTo<User>`
+
+---
+
 ## Cascade Behaviour
 
 | Deleted record | Effect |
 |---|---|
-| `users` row deleted | All `saved_stations` rows for that user are deleted |
+| `users` row deleted | All `saved_stations` and `saved_earthquake_searches` rows for that user are deleted |
 | `usgs_stations` row deleted | All `station_readings` and `saved_stations` rows for that station are deleted |
 
 Earthquakes have no foreign keys and are unaffected by deletions elsewhere.
