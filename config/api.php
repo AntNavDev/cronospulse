@@ -22,4 +22,8 @@ return [
         'water_services_url' => env('USGS_WATER_SERVICES_API_URL', 'https://waterservices.usgs.gov/nwis/iv/'),
     ],
 
+    'nws' => [
+        'alerts_url' => env('NWS_ALERTS_API_URL', 'https://api.weather.gov/'),
+    ],
+
 ];

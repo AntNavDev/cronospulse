@@ -32,6 +32,10 @@ readonly class WaterServicesData
      * @param float|null  $latestValue   Most recent reading, or null if the site reported no-data.
      * @param string|null $latestDateTime ISO 8601 datetime of the most recent reading.
      * @param string[]    $qualifiers    Qualifier codes on the latest reading (e.g. ['P'], ['A']).
+     * @param array<int, array{value: float|null, dateTime: string|null}> $allValues
+     *     All readings in the queried period as {value, dateTime} pairs, oldest first.
+     *     Populated by WaterServicesService. Used for sparkline/time-series chart rendering.
+     *     Empty array when only the latest reading was needed.
      */
     public function __construct(
         public string $siteCode,
@@ -44,6 +48,7 @@ readonly class WaterServicesData
         public ?float $latestValue,
         public ?string $latestDateTime,
         public array $qualifiers,
+        public array $allValues = [],
     ) {
     }
 

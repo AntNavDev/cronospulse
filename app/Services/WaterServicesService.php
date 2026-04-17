@@ -96,6 +96,19 @@ class WaterServicesService
         $latestDateTime = $latestReading !== null ? ((string) ($latestReading['dateTime'] ?? '')) ?: null : null;
         $qualifiers     = array_values(array_map('strval', (array) ($latestReading['qualifiers'] ?? [])));
 
+        // Build the full readings array for sparkline / time-series chart use.
+        // Each entry is oldest-first, mirroring the API's natural ordering.
+        $allValues = array_map(
+            function (array $r) use ($noDataValue): array {
+                $raw = (float) ($r['value'] ?? $noDataValue);
+                return [
+                    'value'    => $raw !== $noDataValue ? $raw : null,
+                    'dateTime' => ($r['dateTime'] ?? '') ?: null,
+                ];
+            },
+            $valuesGroup,
+        );
+
         return new WaterServicesData(
             siteCode: $siteCode,
             siteName: $siteName,
@@ -107,6 +120,7 @@ class WaterServicesService
             latestValue: $latestValue,
             latestDateTime: $latestDateTime,
             qualifiers: $qualifiers,
+            allValues: $allValues,
         );
     }
 }
