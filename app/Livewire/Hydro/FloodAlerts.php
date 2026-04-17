@@ -74,7 +74,7 @@ class FloodAlerts extends Component
     /**
      * Number of alerts shown per page in the national list.
      */
-    private const LIST_PER_PAGE = 12;
+    private const LIST_PER_PAGE = 8;
 
     protected NWSAlertsService $nwsAlertsService;
 

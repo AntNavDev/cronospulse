@@ -119,9 +119,9 @@
 
     /* ─── USGS event type badge colors ───────── */
     /* Earthquake */
-    --color-badge-eq-bg:        #FBE8E4;
-    --color-badge-eq-text:      #943020;
-    --color-badge-eq-border:    #F0C8C0;
+    --color-badge-eq-bg:        #F5EDE4;
+    --color-badge-eq-text:      #7A4A28;
+    --color-badge-eq-border:    #E8D4C4;
 
     /* Flood / streamflow */
     --color-badge-flood-bg:     #E4F0FB;
@@ -129,9 +129,9 @@
     --color-badge-flood-border: #C0D8F0;
 
     /* Volcano */
-    --color-badge-vol-bg:       #FBF4DC;
-    --color-badge-vol-text:     #9A6A10;
-    --color-badge-vol-border:   #ECD898;
+    --color-badge-vol-bg:       #FBE8E4;
+    --color-badge-vol-text:     #943020;
+    --color-badge-vol-border:   #F0C8C0;
 
     /* Landslide / geologic hazard */
     --color-badge-geo-bg:       #F5F0E0;
@@ -206,9 +206,9 @@
 
     /* ─── USGS event type badge colors ───────── */
     /* Earthquake */
-    --color-badge-eq-bg:        #2A1410;
-    --color-badge-eq-text:      #E07060;
-    --color-badge-eq-border:    #3A2018;
+    --color-badge-eq-bg:        #1E1208;
+    --color-badge-eq-text:      #C08060;
+    --color-badge-eq-border:    #2E1E10;
 
     /* Flood / streamflow */
     --color-badge-flood-bg:     #0A1E2A;
@@ -216,9 +216,9 @@
     --color-badge-flood-border: #0E2A3A;
 
     /* Volcano */
-    --color-badge-vol-bg:       #1A1408;
-    --color-badge-vol-text:     #C8A840;
-    --color-badge-vol-border:   #2A2010;
+    --color-badge-vol-bg:       #2A1410;
+    --color-badge-vol-text:     #E07060;
+    --color-badge-vol-border:   #3A2018;
 
     /* Landslide / geologic hazard */
     --color-badge-geo-bg:       #1E1C10;
