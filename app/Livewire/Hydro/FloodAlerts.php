@@ -7,6 +7,7 @@ namespace App\Livewire\Hydro;
 use App\Api\Queries\NWSAlertsQuery;
 use App\Data\FloodAlertData;
 use App\Services\NWSAlertsService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use Livewire\Component;
 use Throwable;
@@ -258,15 +259,22 @@ class FloodAlerts extends Component
         $this->listError = null;
 
         try {
-            $collection = $this->nwsAlertsService->activeFloodAlerts(NWSAlertsQuery::make());
-
             $order = self::SEVERITY_ORDER;
 
-            $this->allAlerts = $collection
-                ->sortBy(fn (FloodAlertData $alert): int => $order[$alert->severity] ?? 4)
-                ->values()
-                ->map(fn (FloodAlertData $alert): array => $alert->toArray())
-                ->toArray();
+            // Cache the full national feed at 300s — aligned with the poll interval.
+            $this->allAlerts = Cache::remember(
+                'nws.flood.alerts.national',
+                300,
+                function () use ($order): array {
+                    $collection = $this->nwsAlertsService->activeFloodAlerts(NWSAlertsQuery::make());
+
+                    return $collection
+                        ->sortBy(fn (FloodAlertData $alert): int => $order[$alert->severity] ?? 4)
+                        ->values()
+                        ->map(fn (FloodAlertData $alert): array => $alert->toArray())
+                        ->toArray();
+                },
+            );
         } catch (Throwable) {
             $this->listError = 'Failed to reach the NWS Alerts API. Please try again.';
             $this->allAlerts = [];
@@ -288,15 +296,22 @@ class FloodAlerts extends Component
         $this->error = null;
 
         try {
-            $query = NWSAlertsQuery::make()->area($this->stateCd);
-            $collection = $this->nwsAlertsService->activeFloodAlerts($query);
+            // Cache per state at 300s — aligned with the poll interval.
+            $this->mapAlerts = Cache::remember(
+                "nws.flood.alerts.{$this->stateCd}",
+                300,
+                function (): array {
+                    $query      = NWSAlertsQuery::make()->area($this->stateCd);
+                    $collection = $this->nwsAlertsService->activeFloodAlerts($query);
 
-            $this->mapAlerts = $collection
-                ->map(fn (FloodAlertData $alert): array => $alert->toArray())
-                ->values()
-                ->toArray();
+                    return $collection
+                        ->map(fn (FloodAlertData $alert): array => $alert->toArray())
+                        ->values()
+                        ->toArray();
+                },
+            );
         } catch (Throwable) {
-            $this->error    = 'Failed to reach the NWS Alerts API. Please try again.';
+            $this->error     = 'Failed to reach the NWS Alerts API. Please try again.';
             $this->mapAlerts = [];
         }
 
