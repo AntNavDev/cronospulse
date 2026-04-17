@@ -1,8 +1,14 @@
 # CronosPulse
 
-A Laravel application that surfaces real-time and historical geophysical data from the USGS (United States Geological Survey) API — earthquakes, water levels, streamflow, and related datasets — visualised with interactive charts and maps.
+A Laravel application that surfaces real-time geophysical data from USGS and the National Weather Service — earthquakes, volcano activity, and active flood alerts — visualised with interactive charts and maps.
 
 Live at [cronospulse.com](https://cronospulse.com).
+
+## Features
+
+- **QuakeWatch** — Real-time and historical seismic events from the USGS ComCat catalogue, with magnitude, depth, PAGER alert level, and felt reports.
+- **VolcanoWatch** — Current alert levels and aviation colour codes for all monitored US volcanoes via the USGS Volcano Hazards Program API.
+- **HydroWatch** — Active NWS flood watches, warnings, and advisories mapped as GeoJSON polygons by affected zone, filterable by state and severity.
 
 ## Tech Stack
 

@@ -1,7 +1,7 @@
 <x-slot:seo>
     <x-seo
-        title="HydroWatch — Stream & Flood Monitoring"
-        description="Real-time USGS stream gauge data for the United States. Monitor current streamflow, gage height, and flood conditions by state."
+        title="HydroWatch — Flood Alerts"
+        description="Active NWS flood alerts across the United States. Browse current flood watches, warnings, and advisories by state with interactive maps."
         :canonical="url('/hydro-watch')"
     />
 </x-slot:seo>
@@ -10,7 +10,7 @@
     <div class="mb-6">
         <h1 class="text-2xl font-semibold text-text">HydroWatch</h1>
         <p class="mt-1 text-sm text-muted">
-            Real-time USGS stream gauge monitoring and active NWS flood alerts by state.
+            Active NWS flood watches, warnings, and advisories across the United States. Select a state to view alerts on the map.
         </p>
     </div>
 
