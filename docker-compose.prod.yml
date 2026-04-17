@@ -38,6 +38,7 @@ services:
         volumes:
             - .:/var/www/html:ro
             - './docker/nginx/cronospulse.conf:/etc/nginx/conf.d/default.conf:ro'
+            - './docker/nginx/rate-limit.conf:/etc/nginx/conf.d/rate-limit.conf:ro'
         networks:
             - cronospulse_network
             - proxy

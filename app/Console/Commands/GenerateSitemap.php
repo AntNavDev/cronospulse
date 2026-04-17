@@ -38,10 +38,28 @@ class GenerateSitemap extends Command
                     ->setPriority(1.0),
             )
             ->add(
+                Url::create('/quake-watch')
+                    ->setLastModificationDate(Carbon::now())
+                    ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
+                    ->setPriority(0.9),
+            )
+            ->add(
+                Url::create('/volcano-watch')
+                    ->setLastModificationDate(Carbon::now())
+                    ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
+                    ->setPriority(0.9),
+            )
+            ->add(
+                Url::create('/hydro-watch')
+                    ->setLastModificationDate(Carbon::now())
+                    ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
+                    ->setPriority(0.9),
+            )
+            ->add(
                 Url::create('/about')
                     ->setLastModificationDate(Carbon::now())
                     ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
-                    ->setPriority(0.8),
+                    ->setPriority(0.5),
             )
             ->writeToFile(public_path('sitemap.xml'));
 

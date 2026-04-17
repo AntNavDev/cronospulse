@@ -6,6 +6,7 @@
 >
     {{-- Sun icon — shown in dark mode --}}
     <svg
+        x-cloak
         x-show="theme === 'dark'"
         xmlns="http://www.w3.org/2000/svg"
         width="18" height="18"
@@ -23,6 +24,7 @@
 
     {{-- Moon icon — shown in light mode --}}
     <svg
+        x-cloak
         x-show="theme === 'light'"
         xmlns="http://www.w3.org/2000/svg"
         width="18" height="18"
