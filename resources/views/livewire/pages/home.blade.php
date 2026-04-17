@@ -23,9 +23,19 @@
                     earthquakes, volcano activity, and active flood alerts across the United States,
                     visualised and updated as events unfold.
                 </p>
-                <div class="flex flex-wrap gap-3 pt-2">
-                    <x-button variant="primary">Explore earthquakes</x-button>
-                    <x-button variant="secondary">View flood alerts</x-button>
+                <div class="flex flex-wrap gap-2 pt-2">
+                    <a href="{{ route('quake-watch') }}" style="background:var(--color-badge-eq-bg);color:var(--color-badge-eq-text);border:1px solid var(--color-badge-eq-border)"
+                       class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium transition-opacity hover:opacity-75">
+                        Earthquake Hazards →
+                    </a>
+                    <a href="{{ route('volcano-watch') }}" style="background:var(--color-badge-vol-bg);color:var(--color-badge-vol-text);border:1px solid var(--color-badge-vol-border)"
+                       class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium transition-opacity hover:opacity-75">
+                        Volcano Activity →
+                    </a>
+                    <a href="{{ route('hydro-watch') }}" style="background:var(--color-badge-flood-bg);color:var(--color-badge-flood-text);border:1px solid var(--color-badge-flood-border)"
+                       class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium transition-opacity hover:opacity-75">
+                        Flood Alerts →
+                    </a>
                 </div>
             </div>
         </div>
