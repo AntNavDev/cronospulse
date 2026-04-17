@@ -6,6 +6,7 @@ namespace App\Livewire\Hydro;
 
 use App\Api\Queries\WaterServicesQuery;
 use App\Services\WaterServicesService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use Livewire\Component;
 use Throwable;
@@ -142,22 +143,30 @@ class StreamGauge extends Component
         $this->error            = null;
 
         try {
-            $collection = $this->waterServicesService->query(
-                WaterServicesQuery::make()
-                    ->sites([$siteCode])
-                    ->parameterCd(['00060', '00065'])
-                    ->period('P3D'),
+            // Cache sparkline data per site at 15 minutes — USGS readings arrive
+            // every ~15 min, so there is no benefit in fetching more frequently.
+            $this->sparklineData = Cache::remember(
+                "usgs.water.sparkline.{$siteCode}",
+                900,
+                function () use ($siteCode): array {
+                    $collection = $this->waterServicesService->query(
+                        WaterServicesQuery::make()
+                            ->sites([$siteCode])
+                            ->parameterCd(['00060', '00065'])
+                            ->period('P3D'),
+                    );
+
+                    $streamflow = $collection->firstWhere('parameter_code', '00060');
+                    $gageHeight = $collection->firstWhere('parameter_code', '00065');
+                    $siteName   = $collection->first()?->siteName ?? $siteCode;
+
+                    return [
+                        'site_name'   => $siteName,
+                        'streamflow'  => $this->buildSparklineSeries($streamflow?->allValues ?? []),
+                        'gage_height' => $this->buildSparklineSeries($gageHeight?->allValues ?? []),
+                    ];
+                },
             );
-
-            $streamflow = $collection->firstWhere('parameter_code', '00060');
-            $gageHeight = $collection->firstWhere('parameter_code', '00065');
-            $siteName   = $collection->first()?->siteName ?? $siteCode;
-
-            $this->sparklineData = [
-                'site_name'   => $siteName,
-                'streamflow'  => $this->buildSparklineSeries($streamflow?->allValues ?? []),
-                'gage_height' => $this->buildSparklineSeries($gageHeight?->allValues ?? []),
-            ];
         } catch (Throwable) {
             $this->error = 'Failed to load sparkline data for the selected site.';
         }
@@ -187,37 +196,47 @@ class StreamGauge extends Component
         $this->error = null;
 
         try {
-            $collection = $this->waterServicesService->query(
-                WaterServicesQuery::make()
-                    ->stateCd($this->stateCd)
-                    ->parameterCd(['00060', '00065'])
-                    ->siteType('ST')
-                    ->siteStatus('active')
-                    ->period('PT2H'),
+            // Cache per state at 300s — aligned with the wire:poll interval so that
+            // polls serve from cache and the API is only hit when the cache expires.
+            // This is the most expensive call (up to 800 time series for large states).
+            $this->sites = Cache::remember(
+                "usgs.water.sites.{$this->stateCd}",
+                300,
+                function (): array {
+                    $collection = $this->waterServicesService->query(
+                        WaterServicesQuery::make()
+                            ->stateCd($this->stateCd)
+                            ->parameterCd(['00060', '00065'])
+                            ->siteType('ST')
+                            ->siteStatus('active')
+                            ->period('PT2H'),
+                    );
+
+                    return $collection
+                        ->groupBy('site_code')
+                        ->map(function ($series): array {
+                            $streamflow = $series->firstWhere('parameter_code', '00060');
+                            $gageHeight = $series->firstWhere('parameter_code', '00065');
+                            $first      = $series->first();
+
+                            return [
+                                'site_code'      => $first->siteCode,
+                                'site_name'      => $first->siteName,
+                                'lat'            => $first->lat,
+                                'lng'            => $first->lng,
+                                'streamflow'     => $streamflow?->latestValue,
+                                'gage_height'    => $gageHeight?->latestValue,
+                                'is_provisional' => ($streamflow?->isProvisional() ?? false)
+                                    || ($gageHeight?->isProvisional() ?? false),
+                                'latest_time'    => $streamflow?->latestDateTime
+                                    ?? $gageHeight?->latestDateTime,
+                            ];
+                        })
+                        ->sortByDesc(fn (array $site): float => $site['streamflow'] ?? -1)
+                        ->values()
+                        ->toArray();
+                },
             );
-
-            $this->sites = $collection
-                ->groupBy('site_code')
-                ->map(function ($series): array {
-                    $streamflow = $series->firstWhere('parameter_code', '00060');
-                    $gageHeight = $series->firstWhere('parameter_code', '00065');
-                    $first      = $series->first();
-
-                    return [
-                        'site_code'      => $first->siteCode,
-                        'site_name'      => $first->siteName,
-                        'lat'            => $first->lat,
-                        'lng'            => $first->lng,
-                        'streamflow'     => $streamflow?->latestValue,
-                        'gage_height'    => $gageHeight?->latestValue,
-                        'is_provisional' => ($streamflow?->isProvisional() ?? false)
-                            || ($gageHeight?->isProvisional() ?? false),
-                        'latest_time'    => $streamflow?->latestDateTime
-                            ?? $gageHeight?->latestDateTime,
-                    ];
-                })
-                ->values()
-                ->toArray();
         } catch (Throwable) {
             $this->error = 'Failed to reach the USGS Water Services API. Please try again.';
             $this->sites = [];

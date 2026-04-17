@@ -18,9 +18,4 @@
     <div class="mb-10">
         @livewire('hydro.flood-alerts')
     </div>
-
-    {{-- Stream gauge map dashboard --}}
-    <div>
-        @livewire('hydro.stream-gauge')
-    </div>
 </div>
