@@ -12,7 +12,25 @@
 | Path | Purpose |
 |---|---|
 | `app/Livewire/Pages/` | Full-page components mounted directly to routes |
+| `app/Livewire/Hydro/` | Sub-components embedded in HydroWatch (`StreamGauge`, `FloodAlerts`) |
 | `app/Livewire/` (subdirectories) | Reusable components embedded in pages |
+
+## Sub-components
+
+Sub-components live in domain-named subdirectories under `app/Livewire/`. They are embedded in page templates via `@livewire('hydro.stream-gauge')` (dot-separated path mirrors the namespace). Each sub-component is an independent Livewire component with its own lifecycle and state — changes in the parent page do not automatically flow down.
+
+Service injection in sub-components uses the same `boot()` pattern as page components. Sub-components are **not** registered in `AppServiceProvider` (only the services they depend on are).
+
+Browser event flow for HydroWatch sub-components:
+
+**StreamGauge:**
+- Livewire → Alpine map: `$this->dispatch('stream-gauges-updated', sites: [...])` → `window.addEventListener('stream-gauges-updated', ...)`
+- Alpine map → Livewire: popup button dispatches `window.dispatchEvent(new CustomEvent('stream-gauge-selected', ...))` → root div `@stream-gauge-selected.window="$wire.selectSite(...)"`
+
+**FloodAlerts:**
+- Livewire → Alpine map: `$this->dispatch('flood-alerts-updated', alerts: [...])` → `window.addEventListener('flood-alerts-updated', ...)`
+- Livewire → Alpine map (focus): `$this->dispatch('flood-alert-focus', alertId: ...)` → fly to polygon + open popup
+- Alpine map → Livewire: polygon click dispatches `window.dispatchEvent(new CustomEvent('flood-alert-selected', ...))` → root div `@flood-alert-selected.window="$wire.selectAlert(...)"`
 
 ## Full-page components
 

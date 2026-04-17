@@ -521,4 +521,372 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
+    /**
+     * Alpine.js component that renders a Leaflet map for the StreamGauge dashboard.
+     *
+     * Data-driven: renders markers for all stream gauge sites passed in on init,
+     * then updates whenever Livewire dispatches a 'stream-gauges-updated' event
+     * (after a state change or poll refresh). Markers are colored by gage height
+     * using the same placeholder bands used in FloodWatch.
+     *
+     * Clicking a marker shows a popup with current readings and a "Load chart" button.
+     * The button dispatches 'stream-gauge-selected' so the Livewire component can
+     * call selectSite() and load the sparkline without needing $wire in a popup string.
+     *
+     * Usage:
+     *   <div x-data="streamGaugeMap({ elementId: 'stream-gauge-map', initialSites: [...] })">
+     *     <div id="stream-gauge-map" style="height: 100%; width: 100%;"></div>
+     *   </div>
+     *
+     * Browser events dispatched:
+     *   stream-gauge-selected  → { detail: { siteCode } }   user clicked "Load chart"
+     *
+     * Browser events listened for:
+     *   stream-gauges-updated  → { detail: { sites } }      fresh site array from Livewire
+     *   stream-gauge-map-reset → (no detail)                 fly back to initial view
+     */
+    window.Alpine.data('streamGaugeMap', ({ elementId, centerLat = 39.5, centerLng = -98.35, zoom = 4, initialSites = [] }) => ({
+        map: null,
+        markerLayer: null,
+        _sitesListener: null,
+        _resetListener: null,
+
+        init() {
+            this.map = L.map(elementId).setView([centerLat, centerLng], zoom);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 18,
+            }).addTo(this.map);
+
+            this.markerLayer = L.markerClusterGroup({ chunkedLoading: true });
+            this.map.addLayer(this.markerLayer);
+
+            this.renderMarkers(initialSites);
+
+            this._sitesListener = (e) => {
+                this.renderMarkers(e.detail.sites ?? [], e.detail.fitBounds ?? false);
+            };
+
+            this._resetListener = () => {
+                this.map.flyTo([centerLat, centerLng], zoom, { duration: 0.8 });
+            };
+
+            window.addEventListener('stream-gauges-updated', this._sitesListener);
+            window.addEventListener('stream-gauge-map-reset', this._resetListener);
+        },
+
+        /**
+         * Clear and re-render all site markers from the given sites array.
+         *
+         * When fitBounds is true (state change), the map zooms to fit all
+         * rendered markers. When false (poll refresh), the user's current
+         * pan/zoom position is preserved.
+         */
+        renderMarkers(sites, fitBounds = false) {
+            this.markerLayer.clearLayers();
+
+            sites.forEach((site) => {
+                if (! site.lat || ! site.lng) return;
+
+                const color = this.stageColor(site.gage_height);
+                const size  = 18;
+                const half  = size / 2;
+
+                const icon = L.divIcon({
+                    className: '',
+                    html: `<div style="
+                        width:${size}px;
+                        height:${size}px;
+                        border-radius:50%;
+                        background-color:${color};
+                        border:2px solid rgba(255,255,255,0.95);
+                        box-shadow:0 1px 4px rgba(0,0,0,0.35);
+                    "></div>`,
+                    iconSize: [size, size],
+                    iconAnchor: [half, half],
+                    popupAnchor: [0, -(half + 4)],
+                });
+
+                const marker = L.marker([site.lat, site.lng], { icon });
+                marker.bindPopup(this.popupContent(site), { minWidth: 230 });
+                this.markerLayer.addLayer(marker);
+            });
+
+            if (fitBounds && this.markerLayer.getLayers().length > 0) {
+                // Use a short delay so the cluster group has finished adding all
+                // markers before we ask for its bounds — necessary for large state loads.
+                setTimeout(() => {
+                    const bounds = this.markerLayer.getBounds();
+                    if (bounds.isValid()) {
+                        this.map.flyToBounds(bounds, { padding: [40, 40], duration: 0.8 });
+                    }
+                }, 50);
+            }
+        },
+
+        /**
+         * Return a CSS color for the gage height reading using the same bands as FloodWatch.
+         * Falls back to muted for null values.
+         */
+        stageColor(gageHeight) {
+            if (gageHeight === null || gageHeight === undefined) return this.cssVar('--color-text-muted');
+            if (gageHeight > 20.0) return this.cssVar('--color-danger');
+            if (gageHeight > 10.0) return this.cssVar('--color-warning');
+            if (gageHeight >  5.0) return this.cssVar('--color-info');
+            return this.cssVar('--color-success');
+        },
+
+        /**
+         * Build the HTML string for a site marker popup.
+         *
+         * The "Load 7-day chart" button dispatches 'stream-gauge-selected' via
+         * window.dispatchEvent so the StreamGauge Livewire component can call
+         * selectSite() without needing $wire inside a popup string.
+         */
+        popupContent(site) {
+            const esc = (str) => {
+                const d = document.createElement('div');
+                d.textContent = str ?? '—';
+                return d.innerHTML;
+            };
+
+            const streamflow = site.streamflow !== null && site.streamflow !== undefined
+                ? `${Number(site.streamflow).toLocaleString()} ft³/s`
+                : '—';
+            const gageHeight = site.gage_height !== null && site.gage_height !== undefined
+                ? `${Number(site.gage_height).toFixed(2)} ft`
+                : '—';
+
+            return `
+                <div style="font-family:sans-serif;font-size:13px;line-height:1.6;">
+                    <div style="font-size:14px;font-weight:700;margin-bottom:6px;">${esc(site.site_name)}</div>
+                    <table style="width:100%;border-collapse:collapse;font-size:12px;color:#6b7280;">
+                        <tr>
+                            <td style="padding:2px 8px 2px 0;">Streamflow</td>
+                            <td style="text-align:right;font-weight:600;color:#111827;">${streamflow}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:2px 8px 2px 0;">Gage height</td>
+                            <td style="text-align:right;font-weight:600;color:#111827;">${gageHeight}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:2px 8px 2px 0;">Site</td>
+                            <td style="text-align:right;font-weight:600;color:#111827;">${esc(site.site_code)}</td>
+                        </tr>
+                    </table>
+                    <div style="margin-top:10px;">
+                        <button
+                            onclick="window.dispatchEvent(new CustomEvent('stream-gauge-selected', { detail: { siteCode: '${esc(site.site_code)}' } }))"
+                            style="width:100%;padding:5px 0;background:${this.cssVar('--color-accent')};color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;"
+                        >
+                            Load 3-day chart
+                        </button>
+                    </div>
+                    ${site.is_provisional ? '<div style="margin-top:6px;font-size:11px;color:#9ca3af;">P — Provisional data</div>' : ''}
+                </div>
+            `;
+        },
+
+        /**
+         * Read a CSS custom property value from the root element.
+         */
+        cssVar(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        },
+
+        destroy() {
+            window.removeEventListener('stream-gauges-updated', this._sitesListener);
+            window.removeEventListener('stream-gauge-map-reset', this._resetListener);
+            if (this.map) {
+                this.map.remove();
+                this.map = null;
+            }
+        },
+    }));
+
+    /**
+     * Alpine.js component that renders a Leaflet map for the FloodAlerts dashboard.
+     *
+     * Data-driven: renders NWS alert polygons as GeoJSON layers on init, then
+     * updates whenever Livewire dispatches a 'flood-alerts-updated' event.
+     * Polygons are coloured by CAP severity. Clicking a polygon dispatches
+     * 'flood-alert-selected' so the Livewire component can show the detail panel.
+     *
+     * Alerts without geometry are excluded from the map (shown in list only).
+     *
+     * Usage:
+     *   <div x-data="floodAlertsMap({ elementId: 'flood-alerts-map', initialAlerts: [...] })">
+     *     <div id="flood-alerts-map" style="height: 100%; width: 100%;"></div>
+     *   </div>
+     *
+     * Browser events dispatched:
+     *   flood-alert-selected → { detail: { alertId } }   user clicked a polygon
+     *
+     * Browser events listened for:
+     *   flood-alerts-updated → { detail: { alerts } }    fresh alert array from Livewire
+     *   flood-alert-focus    → { detail: { alertId } }   fly to + highlight a specific alert
+     *   flood-alerts-map-reset → (no detail)              fly back to initial view
+     */
+    window.Alpine.data('floodAlertsMap', ({ elementId, centerLat = 39.5, centerLng = -98.35, zoom = 4, initialAlerts = [] }) => ({
+        map: null,
+        geoJsonLayer: null,
+        _alertsListener: null,
+        _focusListener: null,
+        _resetListener: null,
+
+        init() {
+            this.map = L.map(elementId).setView([centerLat, centerLng], zoom);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 18,
+            }).addTo(this.map);
+
+            this.renderAlerts(initialAlerts);
+
+            this._alertsListener = (e) => {
+                this.renderAlerts(e.detail.alerts ?? []);
+            };
+
+            // When Livewire selects an alert from the list, fly to its polygon and open its popup.
+            this._focusListener = (e) => {
+                if (! this.geoJsonLayer) return;
+                this.geoJsonLayer.eachLayer((layer) => {
+                    if (layer.feature && layer.feature.properties && layer.feature.properties.id === e.detail.alertId) {
+                        const bounds = layer.getBounds ? layer.getBounds() : null;
+                        if (bounds && bounds.isValid()) {
+                            this.map.flyToBounds(bounds, { padding: [30, 30], duration: 0.8 });
+                        }
+                        if (layer.openPopup) layer.openPopup();
+                    }
+                });
+            };
+
+            this._resetListener = () => {
+                this.map.flyTo([centerLat, centerLng], zoom, { duration: 0.8 });
+            };
+
+            window.addEventListener('flood-alerts-updated', this._alertsListener);
+            window.addEventListener('flood-alert-focus', this._focusListener);
+            window.addEventListener('flood-alerts-map-reset', this._resetListener);
+        },
+
+        /**
+         * Clear existing polygons and render fresh GeoJSON layers for the given alerts.
+         *
+         * Only alerts with geometry are rendered. Each polygon is styled by CAP severity
+         * and emits 'flood-alert-selected' on click so Livewire can show the detail panel.
+         */
+        renderAlerts(alerts) {
+            if (this.geoJsonLayer) {
+                this.map.removeLayer(this.geoJsonLayer);
+                this.geoJsonLayer = null;
+            }
+
+            const features = alerts
+                .filter((a) => a.geometry !== null && a.geometry !== undefined)
+                .map((a) => ({
+                    type: 'Feature',
+                    id: a.id,
+                    properties: { id: a.id, severity: a.severity, event: a.event, headline: a.headline },
+                    geometry: a.geometry,
+                }));
+
+            if (features.length === 0) return;
+
+            this.geoJsonLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
+                style: (feature) => this.polygonStyle(feature.properties.severity),
+
+                onEachFeature: (feature, layer) => {
+                    layer.bindPopup(this.popupContent(feature.properties), { minWidth: 220 });
+
+                    layer.on('click', () => {
+                        window.dispatchEvent(new CustomEvent('flood-alert-selected', {
+                            detail: { alertId: feature.properties.id },
+                        }));
+                    });
+                },
+            }).addTo(this.map);
+        },
+
+        /**
+         * Return a Leaflet path style object based on CAP severity.
+         *
+         * Reads from CSS custom properties so colours respect the active theme.
+         * Fill opacity is kept low so underlying map tiles remain readable.
+         */
+        polygonStyle(severity) {
+            const color = this.severityColor(severity);
+            return {
+                color,
+                weight: 2,
+                opacity: 0.9,
+                fillColor: color,
+                fillOpacity: 0.18,
+            };
+        },
+
+        /**
+         * Return a CSS color string for the given CAP severity level.
+         */
+        severityColor(severity) {
+            switch (severity) {
+                case 'Extreme':  return this.cssVar('--color-danger');
+                case 'Severe':   return this.cssVar('--color-danger');
+                case 'Moderate': return this.cssVar('--color-warning');
+                case 'Minor':    return this.cssVar('--color-info');
+                default:         return this.cssVar('--color-text-muted');
+            }
+        },
+
+        /**
+         * Build the HTML string for a polygon popup.
+         *
+         * Inline styles are required — the popup lives in a Leaflet-managed
+         * DOM node outside Tailwind's scope.
+         */
+        popupContent(props) {
+            const esc = (str) => {
+                const d = document.createElement('div');
+                d.textContent = str ?? '';
+                return d.innerHTML;
+            };
+
+            const color = this.severityColor(props.severity);
+
+            return `
+                <div style="font-family:sans-serif;font-size:13px;line-height:1.6;">
+                    <div style="font-size:14px;font-weight:700;margin-bottom:4px;color:${color};">${esc(props.event)}</div>
+                    <div style="color:#374151;font-size:12px;line-height:1.5;">${esc(props.headline)}</div>
+                    <div style="margin-top:10px;">
+                        <button
+                            onclick="window.dispatchEvent(new CustomEvent('flood-alert-selected', { detail: { alertId: '${esc(props.id)}' } }))"
+                            style="width:100%;padding:5px 0;background:${color};color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;"
+                        >
+                            View details
+                        </button>
+                    </div>
+                </div>
+            `;
+        },
+
+        /**
+         * Read a CSS custom property value from the root element.
+         */
+        cssVar(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        },
+
+        destroy() {
+            window.removeEventListener('flood-alerts-updated', this._alertsListener);
+            window.removeEventListener('flood-alert-focus', this._focusListener);
+            window.removeEventListener('flood-alerts-map-reset', this._resetListener);
+            if (this.map) {
+                this.map.remove();
+                this.map = null;
+            }
+        },
+    }));
+
 });
