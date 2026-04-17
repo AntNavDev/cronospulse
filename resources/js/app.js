@@ -390,7 +390,14 @@ document.addEventListener('alpine:init', () => {
                 maxZoom: 18,
             }).addTo(this.map);
 
-            this.markerLayer = L.markerClusterGroup({ chunkedLoading: true });
+            this.markerLayer = L.markerClusterGroup({
+                chunkedLoading: true,
+                // At zoom 8+ markers render individually with no cluster-dissolution
+                // animation, preventing a markercluster race condition where the
+                // animation callback fires after _map has been set to null.
+                disableClusteringAtZoom: 8,
+                spiderfyOnMaxZoom: false,
+            });
             this.map.addLayer(this.markerLayer);
 
             // Render markers for the initial volcano set passed from Blade.
@@ -934,14 +941,6 @@ document.addEventListener('alpine:init', () => {
                 <div style="font-family:sans-serif;font-size:13px;line-height:1.6;">
                     <div style="font-size:14px;font-weight:700;margin-bottom:4px;color:${color};">${esc(props.event)}</div>
                     <div style="color:#374151;font-size:12px;line-height:1.5;">${esc(props.headline)}</div>
-                    <div style="margin-top:10px;">
-                        <button
-                            onclick="window.dispatchEvent(new CustomEvent('flood-alert-selected', { detail: { alertId: '${esc(props.id)}' } }))"
-                            style="width:100%;padding:5px 0;background:${color};color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;"
-                        >
-                            View details
-                        </button>
-                    </div>
                 </div>
             `;
         },
