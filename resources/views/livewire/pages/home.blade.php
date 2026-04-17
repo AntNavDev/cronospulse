@@ -1,7 +1,7 @@
 <x-slot:seo>
     <x-seo
         title="Real-Time Geophysical Data"
-        description="Live earthquake activity, streamflow levels, and water gauge readings across the United States — sourced directly from the U.S. Geological Survey."
+        description="Live earthquake activity, volcano status, and active flood alerts across the United States — sourced from USGS and the National Weather Service."
         :canonical="url('/')"
     />
 </x-slot:seo>
@@ -19,13 +19,13 @@
                     CronosPulse
                 </h1>
                 <p class="text-lg leading-relaxed text-muted">
-                    Real-time geophysical data from the U.S. Geological Survey — earthquakes,
-                    streamflow levels, and water gauge readings across the United States,
-                    visualised and updated the moment they're detected.
+                    Real-time geophysical data from USGS and the National Weather Service —
+                    earthquakes, volcano activity, and active flood alerts across the United States,
+                    visualised and updated as events unfold.
                 </p>
                 <div class="flex flex-wrap gap-3 pt-2">
                     <x-button variant="primary">Explore earthquakes</x-button>
-                    <x-button variant="secondary">Browse stations</x-button>
+                    <x-button variant="secondary">View flood alerts</x-button>
                 </div>
             </div>
         </div>
@@ -35,7 +35,7 @@
     <section class="space-y-8">
         <h2 class="text-2xl font-semibold text-text">Connected data sources</h2>
 
-        <div class="grid gap-6 sm:grid-cols-2">
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 
             <div class="rounded-xl border border-border bg-surface p-6 transition-colors hover:bg-surface-hover">
                 <div class="mb-3 flex items-center gap-3">
@@ -69,30 +69,60 @@
 
             <div class="rounded-xl border border-border bg-surface p-6 transition-colors hover:bg-surface-hover">
                 <div class="mb-3 flex items-center gap-3">
-                    <x-label variant="flood">Hydrology</x-label>
-                    <h3 class="font-semibold text-text">Streamflow &amp; Water Levels</h3>
+                    <x-label variant="vol">Volcanic</x-label>
+                    <h3 class="font-semibold text-text">Volcano Activity</h3>
                 </div>
                 <p class="text-sm text-muted">
-                    Time-series readings from thousands of USGS stream gauges via the National Water
-                    Information System (NWIS). Data covers discharge rates, gage height, and water
-                    temperature at active monitoring stations.
+                    Current alert levels and aviation colour codes for every monitored US volcano,
+                    sourced from the USGS Volcano Hazards Program. Covers the full range from
+                    background baseline to eruption-level alerts.
                 </p>
                 <ul class="mt-4 space-y-1 text-sm text-muted">
                     <li class="flex items-center gap-2">
                         <span class="size-1 rounded-full bg-accent-muted"></span>
-                        Discharge / streamflow (ft³/s)
+                        Alert level (Normal → Warning)
                     </li>
                     <li class="flex items-center gap-2">
                         <span class="size-1 rounded-full bg-accent-muted"></span>
-                        Gage height / water level (ft)
+                        Aviation colour code (Green → Red)
                     </li>
                     <li class="flex items-center gap-2">
                         <span class="size-1 rounded-full bg-accent-muted"></span>
-                        Water temperature (°C)
+                        Location and monitoring network
                     </li>
                     <li class="flex items-center gap-2">
                         <span class="size-1 rounded-full bg-accent-muted"></span>
-                        Provisional and approved readings
+                        Filterable by alert level and state
+                    </li>
+                </ul>
+            </div>
+
+            <div class="rounded-xl border border-border bg-surface p-6 transition-colors hover:bg-surface-hover">
+                <div class="mb-3 flex items-center gap-3">
+                    <x-label variant="flood">Flood</x-label>
+                    <h3 class="font-semibold text-text">Flood Alerts</h3>
+                </div>
+                <p class="text-sm text-muted">
+                    Active NWS flood watches, warnings, and advisories across the United States.
+                    Alerts are mapped as GeoJSON polygons by affected zone and filterable by state,
+                    sorted by CAP severity level.
+                </p>
+                <ul class="mt-4 space-y-1 text-sm text-muted">
+                    <li class="flex items-center gap-2">
+                        <span class="size-1 rounded-full bg-accent-muted"></span>
+                        Watches, warnings, and advisories
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="size-1 rounded-full bg-accent-muted"></span>
+                        CAP severity (Minor → Extreme)
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="size-1 rounded-full bg-accent-muted"></span>
+                        GeoJSON zone polygons on interactive map
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="size-1 rounded-full bg-accent-muted"></span>
+                        National feed + per-state map view
                     </li>
                 </ul>
             </div>
