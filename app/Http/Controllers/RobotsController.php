@@ -17,7 +17,9 @@ class RobotsController extends Controller
         $content = implode("\n", [
             'User-agent: *',
             'Allow: /',
-            'Disallow: /admin',
+            'Disallow: /login',
+            'Disallow: /register',
+            'Disallow: /dashboard',
             '',
             'Sitemap: ' . url('/sitemap.xml'),
             '',
