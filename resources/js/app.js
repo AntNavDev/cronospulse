@@ -764,9 +764,10 @@ document.addEventListener('alpine:init', () => {
      *   flood-alert-selected → { detail: { alertId } }   user clicked a polygon
      *
      * Browser events listened for:
-     *   flood-alerts-updated → { detail: { alerts } }    fresh alert array from Livewire
-     *   flood-alert-focus    → { detail: { alertId } }   fly to + highlight a specific alert
-     *   flood-alerts-map-reset → (no detail)              fly back to initial view
+     *   flood-alerts-updated    → { detail: { alerts } }    fresh alert array from Livewire
+     *   flood-alert-focus       → { detail: { alertId } }   fly to + highlight a specific alert
+     *   flood-alerts-map-reset  → (no detail)               fly back to initial view
+     *   flood-alerts-state-zoom → { detail: { stateCd } }   zoom to a US state bounding box
      */
     window.Alpine.data('floodAlertsMap', ({ elementId, centerLat = 39.5, centerLng = -98.35, zoom = 4, initialAlerts = [] }) => ({
         map: null,
@@ -774,6 +775,7 @@ document.addEventListener('alpine:init', () => {
         _alertsListener: null,
         _focusListener: null,
         _resetListener: null,
+        _stateZoomListener: null,
 
         init() {
             this.map = L.map(elementId).setView([centerLat, centerLng], zoom);
@@ -807,9 +809,18 @@ document.addEventListener('alpine:init', () => {
                 this.map.flyTo([centerLat, centerLng], zoom, { duration: 0.8 });
             };
 
+            // Zoom to a state bounding box when the state selector changes.
+            this._stateZoomListener = (e) => {
+                const bounds = STATE_BOUNDS[(e.detail.stateCd ?? '').toUpperCase()];
+                if (bounds) {
+                    this.map.flyToBounds(bounds, { padding: [20, 20], duration: 0.8 });
+                }
+            };
+
             window.addEventListener('flood-alerts-updated', this._alertsListener);
             window.addEventListener('flood-alert-focus', this._focusListener);
             window.addEventListener('flood-alerts-map-reset', this._resetListener);
+            window.addEventListener('flood-alerts-state-zoom', this._stateZoomListener);
         },
 
         /**
@@ -922,6 +933,7 @@ document.addEventListener('alpine:init', () => {
             window.removeEventListener('flood-alerts-updated', this._alertsListener);
             window.removeEventListener('flood-alert-focus', this._focusListener);
             window.removeEventListener('flood-alerts-map-reset', this._resetListener);
+            window.removeEventListener('flood-alerts-state-zoom', this._stateZoomListener);
             if (this.map) {
                 this.map.remove();
                 this.map = null;

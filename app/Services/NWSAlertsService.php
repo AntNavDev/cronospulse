@@ -92,6 +92,20 @@ class NWSAlertsService
     {
         $props = $feature['properties'] ?? [];
 
+        // Derive the two-letter state code from the first UGC geocode entry.
+        // UGC codes follow the pattern {STATE}{TYPE}{number} (e.g. 'VAZ505'),
+        // so the first two characters are always the uppercase state abbreviation.
+        $ugcCodes  = $props['geocode']['UGC'] ?? [];
+        $stateCode = null;
+
+        if (! empty($ugcCodes)) {
+            $firstCode = (string) ($ugcCodes[0] ?? '');
+
+            if (strlen($firstCode) >= 2) {
+                $stateCode = strtolower(substr($firstCode, 0, 2));
+            }
+        }
+
         return new FloodAlertData(
             id: (string) ($feature['id'] ?? ''),
             event: (string) ($props['event'] ?? ''),
@@ -107,6 +121,7 @@ class NWSAlertsService
             geometry: isset($feature['geometry']) && is_array($feature['geometry'])
                 ? $feature['geometry']
                 : null,
+            stateCode: $stateCode,
         );
     }
 }
