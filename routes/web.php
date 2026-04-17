@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\RobotsController;
 use App\Livewire\Pages\About;
+use App\Livewire\Pages\Dashboard;
 use App\Livewire\Pages\Home;
 use App\Livewire\Pages\HydroWatch;
 use App\Livewire\Pages\QuakeWatch;
@@ -46,5 +47,5 @@ Route::middleware('guest')->group(function () {
 */
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
-    Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
+    Route::get('/dashboard', Dashboard::class)->name('dashboard');
 });

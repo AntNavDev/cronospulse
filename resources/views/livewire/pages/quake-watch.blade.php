@@ -20,11 +20,11 @@
 --}}
 <div
     x-data="{
-        lat: null,
-        lng: null,
-        radius: 50,
+        lat: {{ $initialLat ?? 'null' }},
+        lng: {{ $initialLng ?? 'null' }},
+        radius: {{ $initialRadius }},
         unit: 'km',
-        minMag: 0.0,
+        minMag: {{ $initialMinMag }},
         timezone: 'UTC',
 
         get radiusKm() {
@@ -48,6 +48,10 @@
             );
         }
     }"
+    x-init="if (lat !== null) $nextTick(() => {
+        window.dispatchEvent(new CustomEvent('map-location-set', { detail: { lat, lng, meters: radiusKm * 1000 } }));
+        $wire.search(lat, lng, radiusKm, minMag, 'UTC')
+    })"
     @map-clicked.window="lat = $event.detail.lat; lng = $event.detail.lng; timezone = $event.detail.timezone ?? 'UTC'"
 >
     <div class="mb-6">
@@ -172,6 +176,36 @@
                 <span wire:loading.remove wire:target="search">Search</span>
                 <span wire:loading wire:target="search">Searching…</span>
             </button>
+
+            {{-- Save this search (auth-gated, shown once results exist) --}}
+            @auth
+                @if ($earthquakes !== null)
+                    <div class="rounded-xl border border-border bg-surface p-4">
+                        <p class="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Save this search</p>
+                        <div class="flex gap-2">
+                            <x-input
+                                wire:model="saveName"
+                                type="text"
+                                placeholder="e.g. Bay Area M3+"
+                                maxlength="100"
+                                class="flex-1 text-sm"
+                            />
+                            <button
+                                type="button"
+                                @click="$wire.saveSearch(lat, lng, radiusKm, minMag)"
+                                class="shrink-0 rounded-lg border border-border bg-surface-raised px-3 py-2 text-sm font-medium text-text transition hover:bg-surface-hover"
+                            >
+                                Save
+                            </button>
+                        </div>
+                        @if ($saveMessage)
+                            <p class="mt-2 text-xs {{ $saveSuccess ? 'text-success' : 'text-danger' }}">
+                                {{ $saveMessage }}
+                            </p>
+                        @endif
+                    </div>
+                @endif
+            @endauth
 
         </div>
     </div>

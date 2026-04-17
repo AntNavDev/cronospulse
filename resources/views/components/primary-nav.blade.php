@@ -1,4 +1,4 @@
-<nav aria-label="Primary" class="border-b border-border" x-data="{ mobileOpen: false }">
+<nav aria-label="Primary" class="border-b border-border" x-data="{ mobileOpen: false, dropdownOpen: false }">
     <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
 
         {{-- Logo + desktop links --}}
@@ -20,11 +20,51 @@
 
             <x-theme-toggle />
 
+            {{-- Desktop: user dropdown or sign-in link --}}
             @auth
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-button type="submit" variant="ghost" class="hidden sm:inline-flex">Sign out</x-button>
-                </form>
+                <div class="relative hidden sm:block" @click.outside="dropdownOpen = false">
+                    <button
+                        type="button"
+                        @click="dropdownOpen = !dropdownOpen"
+                        :aria-expanded="dropdownOpen"
+                        class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:bg-surface-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+                    >
+                        {{ auth()->user()->username }}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 transition-transform" :class="dropdownOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div
+                        x-show="dropdownOpen"
+                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 scale-100"
+                        x-transition:leave-end="opacity-0 scale-95"
+                        class="absolute right-0 mt-1 w-44 origin-top-right rounded-xl border border-border bg-surface shadow-lg"
+                    >
+                        <div class="p-1">
+                            <a
+                                href="{{ route('dashboard') }}"
+                                @click="dropdownOpen = false"
+                                class="flex w-full items-center rounded-lg px-3 py-2 text-sm text-text transition-colors hover:bg-surface-hover"
+                            >
+                                Dashboard
+                            </a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button
+                                    type="submit"
+                                    class="flex w-full items-center rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-hover hover:text-text"
+                                >
+                                    Sign out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             @else
                 <x-nav-link href="{{ route('login') }}" :active="request()->routeIs('login')" class="hidden sm:inline-flex">Sign in</x-nav-link>
             @endauth
@@ -49,19 +89,31 @@
 
     {{-- Mobile menu --}}
     <div id="mobile-nav" x-show="mobileOpen" x-collapse class="border-t border-border sm:hidden">
-        <div class="space-y-1 px-4 pb-4 pt-2">
-            <x-responsive-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">Home</x-responsive-nav-link>
-            <x-responsive-nav-link href="{{ route('quake-watch') }}" :active="request()->routeIs('quake-watch')">QuakeWatch</x-responsive-nav-link>
-            <x-responsive-nav-link href="{{ route('volcano-watch') }}" :active="request()->routeIs('volcano-watch')">VolcanoWatch</x-responsive-nav-link>
-            <x-responsive-nav-link href="{{ route('hydro-watch') }}" :active="request()->routeIs('hydro-watch')">HydroWatch</x-responsive-nav-link>
-            <x-responsive-nav-link href="{{ route('about') }}" :active="request()->routeIs('about')">About</x-responsive-nav-link>
+        <div class="px-4 pb-4 pt-2">
+            <div class="space-y-1">
+                <x-responsive-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">Home</x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('quake-watch') }}" :active="request()->routeIs('quake-watch')">QuakeWatch</x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('volcano-watch') }}" :active="request()->routeIs('volcano-watch')">VolcanoWatch</x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('hydro-watch') }}" :active="request()->routeIs('hydro-watch')">HydroWatch</x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('about') }}" :active="request()->routeIs('about')">About</x-responsive-nav-link>
+            </div>
+
+            {{-- Mobile user section --}}
             @auth
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-responsive-nav-link href="#" onclick="this.closest('form').submit()">Sign out</x-responsive-nav-link>
-                </form>
+                <div class="mt-3 border-t border-border pt-3">
+                    <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted">
+                        {{ auth()->user()->username }}
+                    </p>
+                    <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">Dashboard</x-responsive-nav-link>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <x-responsive-nav-link href="#" onclick="this.closest('form').submit()">Sign out</x-responsive-nav-link>
+                    </form>
+                </div>
             @else
-                <x-responsive-nav-link href="{{ route('login') }}" :active="request()->routeIs('login')">Sign in</x-responsive-nav-link>
+                <div class="mt-3 border-t border-border pt-3">
+                    <x-responsive-nav-link href="{{ route('login') }}" :active="request()->routeIs('login')">Sign in</x-responsive-nav-link>
+                </div>
             @endauth
         </div>
     </div>
