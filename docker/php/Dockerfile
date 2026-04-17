@@ -33,7 +33,9 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 COPY . /var/www/html
 
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+RUN chown -R www-data:www-data /var/www/html
 
 USER www-data
 
