@@ -89,7 +89,6 @@ $COMPOSE exec -T app php artisan event:cache
 echo "==> Setting permissions..."
 $COMPOSE exec -T app chown -R www-data:www-data storage bootstrap/cache
 $COMPOSE exec -T app chmod -R 775 storage bootstrap/cache
-$COMPOSE exec -T app php artisan storage:link 2>/dev/null || true
 
 # ── Sitemap ────────────────────────────────────────────────────────────────────
 echo "==> Regenerating sitemap..."
