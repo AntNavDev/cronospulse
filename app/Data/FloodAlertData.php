@@ -62,6 +62,7 @@ readonly class FloodAlertData
      * @param string|null $effective   ISO 8601 datetime when the alert becomes effective.
      * @param string|null $expires     ISO 8601 datetime when the alert expires.
      * @param array|null  $geometry    GeoJSON geometry object (Polygon or MultiPolygon), or null.
+     * @param string|null $stateCode   Two-letter lowercase state code derived from UGC geocode (e.g. 'va'), or null.
      */
     public function __construct(
         public string $id,
@@ -76,6 +77,7 @@ readonly class FloodAlertData
         public ?string $effective,
         public ?string $expires,
         public ?array $geometry,
+        public ?string $stateCode = null,
     ) {
     }
 
@@ -204,6 +206,7 @@ readonly class FloodAlertData
             'geometry'           => $this->geometry,
             'severity_class'     => $this->severityClass(),
             'severity_badge'     => $this->severityBadgeStyle(),
+            'state_code'         => $this->stateCode,
         ];
     }
 }

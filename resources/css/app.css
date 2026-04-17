@@ -228,6 +228,16 @@
 
 /* ─── Base resets ─────────────────────────────── */
 @layer base {
+    button,
+    a,
+    select,
+    label[for],
+    [role="button"],
+    [role="tab"],
+    [role="option"] {
+        cursor: pointer;
+    }
+
     :focus-visible {
         outline: 2px solid var(--color-border-focus);
         outline-offset: 2px;
