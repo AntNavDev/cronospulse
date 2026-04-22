@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Pages;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class HomeTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * The home page loads successfully.
      */
