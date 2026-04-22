@@ -57,6 +57,12 @@ class EarthquakeService
                     alert: $props['alert'] ?? null,
                     status: $props['status'] ?? null,
                     url: $props['url'] ?? null,
+                    usgsId: $feature['id'] ?? null,
+                    magnitudeType: $props['magType'] ?? null,
+                    felt: isset($props['felt']) ? (int) $props['felt'] : null,
+                    cdi: isset($props['cdi']) ? (float) $props['cdi'] : null,
+                    mmi: isset($props['mmi']) ? (float) $props['mmi'] : null,
+                    significance: isset($props['sig']) ? (int) $props['sig'] : null,
                 );
             });
     }

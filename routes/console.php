@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Console\Commands\GenerateSitemap;
+use App\Console\Commands\IngestEarthquakes;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -14,4 +15,13 @@ Artisan::command('inspire', function () {
 Schedule::command(GenerateSitemap::class)
     ->daily()
     ->withoutOverlapping()
+    ->runInBackground();
+
+Schedule::command(IngestEarthquakes::class)
+    ->hourly()
+    ->withoutOverlapping()
+    ->runInBackground();
+
+Schedule::command('model:prune', ['--model' => [\App\Models\Earthquake::class]])
+    ->daily()
     ->runInBackground();
