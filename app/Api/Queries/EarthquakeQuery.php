@@ -47,12 +47,12 @@ class EarthquakeQuery
     private string $orderby = 'time';
 
     /**
-     * @param float $latitude  Latitude of the search centre point.
-     * @param float $longitude Longitude of the search centre point.
+     * @param float|null $latitude  Latitude of the search centre point, or null for a global query.
+     * @param float|null $longitude Longitude of the search centre point, or null for a global query.
      */
     private function __construct(
-        private readonly float $latitude,
-        private readonly float $longitude,
+        private readonly ?float $latitude = null,
+        private readonly ?float $longitude = null,
     ) {
     }
 
@@ -67,6 +67,17 @@ class EarthquakeQuery
     public static function make(float $latitude, float $longitude): self
     {
         return new self($latitude, $longitude);
+    }
+
+    /**
+     * Create a global EarthquakeQuery with no geographic centre point.
+     *
+     * No radius is required. Use minmagnitude(), starttime(), etc. to scope results.
+     * Omitting all geographic parameters queries the entire USGS ComCat catalogue.
+     */
+    public static function makeGlobal(): self
+    {
+        return new self();
     }
 
     /**
@@ -219,16 +230,18 @@ class EarthquakeQuery
      */
     public function toArray(): array
     {
-        if ($this->maxradiuskm !== null && $this->maxradius !== null) {
-            throw new InvalidArgumentException(
-                'Set maxradiuskm or maxradius — not both. The USGS API treats simultaneous use as undefined behaviour.',
-            );
-        }
+        if ($this->latitude !== null) {
+            if ($this->maxradiuskm !== null && $this->maxradius !== null) {
+                throw new InvalidArgumentException(
+                    'Set maxradiuskm or maxradius — not both. The USGS API treats simultaneous use as undefined behaviour.',
+                );
+            }
 
-        if ($this->maxradiuskm === null && $this->maxradius === null) {
-            throw new InvalidArgumentException(
-                'A radius is required. Call maxradiuskm() or maxradius() before toArray().',
-            );
+            if ($this->maxradiuskm === null && $this->maxradius === null) {
+                throw new InvalidArgumentException(
+                    'A radius is required. Call maxradiuskm() or maxradius() before toArray().',
+                );
+            }
         }
 
         $params = [

@@ -15,15 +15,21 @@ use Carbon\Carbon;
 readonly class EarthquakeData
 {
     /**
-     * @param float       $lat      Decimal degrees latitude of the event.
-     * @param float       $lng      Decimal degrees longitude of the event.
-     * @param float       $magnitude Moment magnitude (Mw) of the event.
-     * @param string      $place    Human-readable location description from USGS.
-     * @param int         $timeMs   Event time as a Unix timestamp in milliseconds.
-     * @param float       $depthKm  Hypocentre depth in kilometres.
-     * @param string|null $alert    PAGER alert level, or null if not assessed.
-     * @param string|null $status   Review status (e.g. 'automatic', 'reviewed').
-     * @param string|null $url      USGS event detail page URL.
+     * @param float       $lat           Decimal degrees latitude of the event.
+     * @param float       $lng           Decimal degrees longitude of the event.
+     * @param float       $magnitude     Moment magnitude (Mw) of the event.
+     * @param string      $place         Human-readable location description from USGS.
+     * @param int         $timeMs        Event time as a Unix timestamp in milliseconds.
+     * @param float       $depthKm       Hypocentre depth in kilometres.
+     * @param string|null $alert         PAGER alert level, or null if not assessed.
+     * @param string|null $status        Review status (e.g. 'automatic', 'reviewed').
+     * @param string|null $url           USGS event detail page URL.
+     * @param string|null $usgsId        USGS ComCat event ID (e.g. 'us7000abc1').
+     * @param string|null $magnitudeType Magnitude scale used (e.g. 'mw', 'ml', 'mb').
+     * @param int|null    $felt          Number of "Did You Feel It?" reports submitted.
+     * @param float|null  $cdi           Maximum community decimal intensity reported.
+     * @param float|null  $mmi           Maximum instrumental intensity from ShakeMap (MMI).
+     * @param int|null    $significance  USGS significance score 0–1000.
      */
     public function __construct(
         public float $lat,
@@ -35,6 +41,12 @@ readonly class EarthquakeData
         public ?string $alert,
         public ?string $status,
         public ?string $url,
+        public ?string $usgsId = null,
+        public ?string $magnitudeType = null,
+        public ?int $felt = null,
+        public ?float $cdi = null,
+        public ?float $mmi = null,
+        public ?int $significance = null,
     ) {
     }
 

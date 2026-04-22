@@ -41,6 +41,9 @@
         </div>
     </section>
 
+    {{-- Recent seismic activity feed (read from DB, populated by app:ingest-earthquakes) --}}
+    @livewire('recent-earthquakes')
+
     {{-- Data sources --}}
     <section class="space-y-8">
         <h2 class="text-2xl font-semibold text-text">Connected data sources</h2>
