@@ -1,7 +1,7 @@
 <x-slot:seo>
     <x-seo
-        title="HydroWatch — Flood Alerts"
-        description="Active NWS flood alerts across the United States. Browse current flood watches, warnings, and advisories by state with interactive maps."
+        title="HydroWatch — Flood Alerts &amp; Stream Gauges"
+        description="Active NWS flood alerts and USGS stream gauge readings across the United States. Browse flood watches and warnings by state, and track real-time streamflow and gage height."
         :canonical="url('/hydro-watch')"
     />
 </x-slot:seo>
@@ -10,12 +10,17 @@
     <div class="mb-6">
         <h1 class="text-2xl font-semibold text-text">HydroWatch</h1>
         <p class="mt-1 text-sm text-muted">
-            Active NWS flood watches, warnings, and advisories across the United States. Select a state to view alerts on the map.
+            Active NWS flood alerts and USGS stream gauges across the United States.
         </p>
     </div>
 
     {{-- Active flood alerts + national list --}}
     <div class="mb-10">
         @livewire('hydro.flood-alerts')
+    </div>
+
+    {{-- Stream gauges map + sparkline panel --}}
+    <div>
+        @livewire('hydro.stream-gauge')
     </div>
 </div>

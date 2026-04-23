@@ -8,12 +8,24 @@ use App\Data\FloodAlertData;
 use App\Livewire\Hydro\FloodAlerts;
 use App\Services\NWSAlertsService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
 
 class FloodAlertsTest extends TestCase
 {
+    /**
+     * Flush the in-memory array cache before each test so that cache entries
+     * warmed by earlier tests (e.g. nws.flood.alerts.national) don't bleed
+     * through and cause Http::fake() calls to be silently skipped.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Cache::flush();
+    }
+
     /**
      * Component renders with default state and no errors.
      */

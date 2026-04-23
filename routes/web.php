@@ -10,6 +10,7 @@ use App\Livewire\Pages\Dashboard;
 use App\Livewire\Pages\Home;
 use App\Livewire\Pages\HydroWatch;
 use App\Livewire\Pages\QuakeWatch;
+use App\Livewire\Pages\StationDetail;
 use App\Livewire\Pages\VolcanoWatch;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,7 @@ Route::get('/about', About::class)->name('about');
 Route::get('/quake-watch', QuakeWatch::class)->name('quake-watch');
 Route::get('/volcano-watch', VolcanoWatch::class)->name('volcano-watch');
 Route::get('/hydro-watch', HydroWatch::class)->name('hydro-watch');
+Route::get('/hydro/station/{siteNo}', StationDetail::class)->name('hydro.station');
 Route::get('/robots.txt', RobotsController::class)->name('robots');
 
 /*
