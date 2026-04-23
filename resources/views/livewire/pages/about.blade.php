@@ -1,7 +1,7 @@
 <x-slot:seo>
     <x-seo
         title="About"
-        description="CronosPulse is an open data visualisation tool for real-time earthquake activity, volcano alert levels, and active flood warnings across the United States."
+        description="CronosPulse is an open data visualisation tool for real-time earthquake activity, volcano alert levels, active flood warnings, and live stream gauge readings across the United States."
         :canonical="url('/about')"
     />
 </x-slot:seo>
@@ -19,8 +19,8 @@
             <a href="https://www.weather.gov" target="_blank" rel="noopener noreferrer" class="text-[var(--color-text-link)] underline hover:text-[var(--color-text-link-hover)]">
                 National Weather Service (NWS)
             </a>.
-            It surfaces real-time earthquake activity, volcano alert levels, and active flood
-            warnings through interactive charts and maps.
+            It surfaces real-time earthquake activity, volcano alert levels, active flood
+            warnings, and live stream gauge readings through interactive charts and maps.
         </p>
         <p class="text-muted">
             All data is sourced directly from US federal agencies and is subject to their data
@@ -53,7 +53,15 @@
                     National Weather Service — Alerts API
                 </a>
                 <p class="mt-0.5 text-muted">
-                    Active CAP alerts including flood watches, warnings, and advisories by zone and area. Powers HydroWatch.
+                    Active CAP alerts including flood watches, warnings, and advisories by zone and area. Powers the flood alerts section of HydroWatch.
+                </p>
+            </li>
+            <li>
+                <a href="https://waterservices.usgs.gov/" target="_blank" rel="noopener noreferrer" class="font-medium text-[var(--color-text-link)] underline hover:text-[var(--color-text-link-hover)]">
+                    USGS National Water Information System — Instantaneous Values API
+                </a>
+                <p class="mt-0.5 text-muted">
+                    Real-time streamflow and gage height readings from hundreds of active USGS monitoring sites. Powers the stream gauge section of HydroWatch.
                 </p>
             </li>
             <li>
