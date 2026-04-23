@@ -89,7 +89,7 @@ class FloodAlerts extends Component
     /**
      * Two-letter US state or territory code for the map panel.
      */
-    public string $stateCd = 'va';
+    public string $stateCd = 'wa';
 
     /**
      * All active national flood alerts, sorted by severity.

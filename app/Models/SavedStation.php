@@ -15,6 +15,7 @@ class SavedStation extends Model
     protected $fillable = [
         'user_id',
         'station_id',
+        'state_cd',
     ];
 
     /**

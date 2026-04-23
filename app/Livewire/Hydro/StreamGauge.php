@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Hydro;
 
 use App\Api\Queries\WaterServicesQuery;
+use App\Models\UsgsStation;
 use App\Services\WaterServicesService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
@@ -21,6 +22,9 @@ use Throwable;
  * Polling: wire:poll.300s="refreshSites" keeps current readings fresh.
  * The map (wire:ignore) survives re-renders — fresh site data is pushed via
  * the 'stream-gauges-updated' browser event after each load.
+ *
+ * Deep-link: ?state=va&site=01646500 pre-selects a state and opens the
+ * sparkline panel for the given site on arrival. Used by Dashboard bookmark links.
  *
  * Note: loading all active sites for a large state (e.g. TX, CA) may be slow.
  * The USGS IV API returns one time series per site per parameter — a state with
@@ -66,7 +70,7 @@ class StreamGauge extends Component
     /**
      * Two-letter US state code used to scope the site query.
      */
-    public string $stateCd = 'va';
+    public string $stateCd = 'wa';
 
     /**
      * All active stream gauge sites for the selected state, grouped by site code.
@@ -98,11 +102,57 @@ class StreamGauge extends Component
     public ?string $error = null;
 
     /**
+     * USGS site numbers that the authenticated user has bookmarked.
+     * Empty for guests. Refreshed after every save/unsave action.
+     *
+     * @var list<string>
+     */
+    public array $savedSiteCodes = [];
+
+    /**
+     * Flash message shown after a save or unsave action.
+     */
+    public ?string $saveMessage = null;
+
+    /**
+     * Whether the last save action succeeded (controls flash message colour).
+     */
+    public bool $saveSuccess = false;
+
+    /**
      * Load sites on initial mount.
+     *
+     * If ?state= and/or ?site= are present in the URL (deep-link from Dashboard),
+     * pre-select the state and open the sparkline panel for the given site.
      */
     public function mount(): void
     {
-        $this->loadSites();
+        $state = request()->query('state');
+        $site  = request()->query('site');
+
+        if (is_string($state) && array_key_exists($state, self::US_STATES)) {
+            $this->stateCd = $state;
+        }
+
+        // Always fit bounds on initial mount so the map zooms to the active state.
+        $this->loadSites(fitBounds: true);
+        $this->loadSavedSiteCodes();
+
+        if (is_string($site) && $site !== '') {
+            $this->selectSite($site);
+
+            // Fly the map to the pre-selected site and open its popup.
+            $siteData = collect($this->sites ?? [])->firstWhere('site_code', $site);
+
+            if ($siteData) {
+                $this->dispatch(
+                    'stream-gauge-preselect',
+                    siteCode: $site,
+                    lat: $siteData['lat'],
+                    lng: $siteData['lng'],
+                );
+            }
+        }
     }
 
     /**
@@ -114,6 +164,7 @@ class StreamGauge extends Component
     {
         $this->selectedSiteCode = null;
         $this->sparklineData    = null;
+        $this->saveMessage      = null;
         $this->loadSites(fitBounds: true);
     }
 
@@ -141,6 +192,7 @@ class StreamGauge extends Component
         $this->selectedSiteCode = $siteCode;
         $this->sparklineData    = null;
         $this->error            = null;
+        $this->saveMessage      = null;
 
         try {
             // Cache sparkline data per site at 15 minutes — USGS readings arrive
@@ -170,6 +222,76 @@ class StreamGauge extends Component
         } catch (Throwable) {
             $this->error = 'Failed to load sparkline data for the selected site.';
         }
+    }
+
+    /**
+     * Save the currently-selected stream gauge to the user's Dashboard.
+     *
+     * Creates a UsgsStation record if one does not yet exist for this site code
+     * (using the name and coordinates already held in $sites). Capped at 30
+     * bookmarks per user — mirrors the 20-search cap on QuakeWatch.
+     */
+    public function saveStation(): void
+    {
+        $user = auth()->user();
+
+        if (! $user || ! $this->selectedSiteCode) {
+            return;
+        }
+
+        if ($user->savedStations()->count() >= 30) {
+            $this->saveMessage = 'You have reached the 30 saved station limit. Delete one to add more.';
+            $this->saveSuccess = false;
+
+            return;
+        }
+
+        $siteData = collect($this->sites ?? [])->firstWhere('site_code', $this->selectedSiteCode);
+        $station  = UsgsStation::firstOrCreate(
+            ['site_no' => $this->selectedSiteCode],
+            [
+                'name'      => $this->sparklineData['site_name'] ?? $this->selectedSiteCode,
+                'state'     => null,
+                'site_type' => 'ST',
+                'latitude'  => (float) ($siteData['lat'] ?? 0),
+                'longitude' => (float) ($siteData['lng'] ?? 0),
+            ],
+        );
+
+        $user->savedStations()->firstOrCreate(
+            ['station_id' => $station->id],
+            ['state_cd'   => $this->stateCd],
+        );
+
+        $this->loadSavedSiteCodes();
+        $this->saveMessage = 'Station saved to your dashboard.';
+        $this->saveSuccess = true;
+    }
+
+    /**
+     * Remove the currently-selected stream gauge from the user's saved stations.
+     */
+    public function unsaveStation(): void
+    {
+        $user = auth()->user();
+
+        if (! $user || ! $this->selectedSiteCode) {
+            return;
+        }
+
+        $station = UsgsStation::where('site_no', $this->selectedSiteCode)->first();
+
+        if (! $station) {
+            return;
+        }
+
+        $user->savedStations()
+            ->where('station_id', $station->id)
+            ->delete();
+
+        $this->loadSavedSiteCodes();
+        $this->saveMessage = null;
+        $this->saveSuccess = false;
     }
 
     /**
@@ -243,6 +365,30 @@ class StreamGauge extends Component
         }
 
         $this->dispatch('stream-gauges-updated', sites: $this->sites ?? [], fitBounds: $fitBounds, stateCd: $this->stateCd);
+    }
+
+    /**
+     * Populate $savedSiteCodes for the authenticated user.
+     *
+     * Stores the set of USGS site numbers the user has bookmarked so the view
+     * can toggle between "Save" and "Saved ✓" without an extra query per render.
+     */
+    private function loadSavedSiteCodes(): void
+    {
+        if (! auth()->check()) {
+            $this->savedSiteCodes = [];
+
+            return;
+        }
+
+        $this->savedSiteCodes = auth()->user()
+            ->savedStations()
+            ->with('station')
+            ->get()
+            ->pluck('station.site_no')
+            ->filter()
+            ->values()
+            ->toArray();
     }
 
     /**
