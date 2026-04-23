@@ -156,8 +156,8 @@ class StreamGauge extends Component
                             ->period('P3D'),
                     );
 
-                    $streamflow = $collection->firstWhere('parameter_code', '00060');
-                    $gageHeight = $collection->firstWhere('parameter_code', '00065');
+                    $streamflow = $collection->firstWhere('parameterCode', '00060');
+                    $gageHeight = $collection->firstWhere('parameterCode', '00065');
                     $siteName   = $collection->first()?->siteName ?? $siteCode;
 
                     return [
@@ -213,10 +213,10 @@ class StreamGauge extends Component
                     );
 
                     return $collection
-                        ->groupBy('site_code')
+                        ->groupBy('siteCode')
                         ->map(function ($series): array {
-                            $streamflow = $series->firstWhere('parameter_code', '00060');
-                            $gageHeight = $series->firstWhere('parameter_code', '00065');
+                            $streamflow = $series->firstWhere('parameterCode', '00060');
+                            $gageHeight = $series->firstWhere('parameterCode', '00065');
                             $first      = $series->first();
 
                             return [
