@@ -32,7 +32,7 @@ class StationDetailServiceTest extends TestCase
         $this->assertDatabaseHas('usgs_stations', [
             'site_no' => '01646500',
             'name'    => 'Potomac River near Washington DC',
-            'state'   => null,
+            'state'   => 'VA',
             'huc'     => null,
         ]);
 
