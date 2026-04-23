@@ -34,7 +34,7 @@ class FloodAlertsTest extends TestCase
         $this->mockAlertService($this->fakeAlerts());
 
         Livewire::test(FloodAlerts::class)
-            ->assertSet('stateCd', 'va')
+            ->assertSet('stateCd', 'wa')
             ->assertSet('error', null)
             ->assertSet('listError', null);
     }
@@ -86,7 +86,7 @@ class FloodAlertsTest extends TestCase
         $this->mockAlertService($this->fakeAlerts());
 
         Livewire::test(FloodAlerts::class)
-            ->assertSet('stateCd', 'va')
+            ->assertSet('stateCd', 'wa')
             ->call('selectAlertFromList', 'urn:oid:2.49.0.1.840.0.TEST', 'md')
             ->assertSet('stateCd', 'md');
     }
@@ -99,9 +99,9 @@ class FloodAlertsTest extends TestCase
         $this->mockAlertService($this->fakeAlerts());
 
         Livewire::test(FloodAlerts::class)
-            ->assertSet('stateCd', 'va')
+            ->assertSet('stateCd', 'wa')
             ->call('selectAlertFromList', 'urn:oid:2.49.0.1.840.0.TEST', 'xx')
-            ->assertSet('stateCd', 'va');
+            ->assertSet('stateCd', 'wa');
     }
 
     /**

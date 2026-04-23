@@ -14,6 +14,75 @@
         <p class="mt-1 text-sm text-muted">Your saved searches and personal data.</p>
     </div>
 
+    {{-- Saved stream gauges --}}
+    <section class="space-y-4">
+        <div class="flex items-center gap-3">
+            <h2 class="text-lg font-semibold text-text">Saved stream gauges</h2>
+            @if ($stations->isNotEmpty())
+                <span class="rounded-full border border-border bg-surface-raised px-2 py-0.5 text-xs font-medium text-muted">
+                    {{ $stations->count() }} / 30
+                </span>
+            @endif
+        </div>
+
+        @if ($stations->isEmpty())
+            <div class="rounded-xl border border-border bg-surface p-8 text-center">
+                <p class="text-sm text-muted">No saved stations yet.</p>
+                <p class="mt-1 text-sm text-muted">
+                    Open a site on
+                    <a href="{{ route('hydro-watch') }}" class="text-accent hover:underline">HydroWatch</a>
+                    and click <strong>+ Save</strong> in the 3-day chart panel.
+                </p>
+            </div>
+        @else
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach ($stations as $savedStation)
+                    <div class="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <p class="font-medium text-text">{{ $savedStation->station->name }}</p>
+                                <p class="mt-0.5 text-xs text-muted">
+                                    Saved {{ $savedStation->created_at->diffForHumans() }}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                wire:click="deleteStation({{ $savedStation->id }})"
+                                wire:confirm="Remove '{{ $savedStation->station->name }}'?"
+                                class="shrink-0 rounded-md p-1 text-muted transition hover:bg-surface-hover hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+                                aria-label="Remove station"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <dl class="space-y-1.5 text-sm">
+                            <div class="flex justify-between gap-2">
+                                <dt class="text-muted">Site no.</dt>
+                                <dd class="font-mono text-text">{{ $savedStation->station->site_no }}</dd>
+                            </div>
+                            @if ($savedStation->state_cd)
+                                <div class="flex justify-between gap-2">
+                                    <dt class="text-muted">State</dt>
+                                    <dd class="font-mono text-text">{{ strtoupper($savedStation->state_cd) }}</dd>
+                                </div>
+                            @endif
+                        </dl>
+
+                        <a
+                            href="{{ route('hydro-watch', array_filter(['state' => $savedStation->state_cd, 'site' => $savedStation->station->site_no])) }}"
+                            class="mt-auto inline-flex items-center justify-center rounded-lg border border-border bg-surface-raised px-3 py-2 text-sm font-medium text-text transition hover:bg-surface-hover"
+                        >
+                            Open in HydroWatch →
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </section>
+
     {{-- Saved earthquake searches --}}
     <section class="space-y-4">
         <div class="flex items-center gap-3">

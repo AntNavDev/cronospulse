@@ -33,7 +33,7 @@ class StreamGaugeTest extends TestCase
         $this->mockService($this->fakeSites());
 
         Livewire::test(StreamGauge::class)
-            ->assertSet('stateCd', 'va')
+            ->assertSet('stateCd', 'wa')
             ->assertSet('error', null);
     }
 

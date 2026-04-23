@@ -141,14 +141,41 @@
                                     {{ $sparklineData['site_name'] }}
                                 </h3>
                             </div>
-                            <button
-                                type="button"
-                                wire:click="$set('selectedSiteCode', null)"
-                                class="shrink-0 text-xs text-muted hover:text-text focus:outline-none"
-                            >
-                                ✕ Close
-                            </button>
+                            <div class="flex shrink-0 items-center gap-3">
+                                @auth
+                                    @if (in_array($selectedSiteCode, $savedSiteCodes, true))
+                                        <button
+                                            type="button"
+                                            wire:click="unsaveStation"
+                                            class="inline-flex items-center gap-1 rounded-lg border border-border bg-surface-raised px-2.5 py-1 text-xs font-medium text-muted transition hover:bg-surface-hover focus:outline-none"
+                                        >
+                                            ✓ Saved
+                                        </button>
+                                    @else
+                                        <button
+                                            type="button"
+                                            wire:click="saveStation"
+                                            class="inline-flex items-center gap-1 rounded-lg border border-accent bg-accent px-2.5 py-1 text-xs font-medium text-white transition hover:bg-accent-hover focus:outline-none"
+                                        >
+                                            + Save
+                                        </button>
+                                    @endif
+                                @endauth
+                                <button
+                                    type="button"
+                                    wire:click="$set('selectedSiteCode', null)"
+                                    class="text-xs text-muted hover:text-text focus:outline-none"
+                                >
+                                    ✕ Close
+                                </button>
+                            </div>
                         </div>
+
+                        @if ($saveMessage)
+                            <p class="mb-3 text-xs {{ $saveSuccess ? 'text-success' : 'text-danger' }}">
+                                {{ $saveMessage }}
+                            </p>
+                        @endif
 
                         {{-- Streamflow chart --}}
                         @if (! empty($sparklineData['streamflow']['data']))

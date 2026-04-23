@@ -613,8 +613,11 @@ document.addEventListener('alpine:init', () => {
     window.Alpine.data('streamGaugeMap', ({ elementId, centerLat = 39.5, centerLng = -98.35, zoom = 4, initialSites = [] }) => ({
         map: null,
         markerLayer: null,
+        /** @type {Record<string, L.Marker>} Markers indexed by site_code for direct lookup. */
+        markers: {},
         _sitesListener: null,
         _resetListener: null,
+        _preselectListener: null,
 
         init() {
             this.map = L.map(elementId).setView([centerLat, centerLng], zoom);
@@ -624,7 +627,10 @@ document.addEventListener('alpine:init', () => {
                 maxZoom: 18,
             }).addTo(this.map);
 
-            this.markerLayer = L.markerClusterGroup({ chunkedLoading: true });
+            this.markerLayer = L.markerClusterGroup({
+                chunkedLoading: true,
+                disableClusteringAtZoom: 10,
+            });
             this.map.addLayer(this.markerLayer);
 
             this.renderMarkers(initialSites);
@@ -637,8 +643,24 @@ document.addEventListener('alpine:init', () => {
                 this.map.flyTo([centerLat, centerLng], zoom, { duration: 0.8 });
             };
 
+            // Deep-link: fly to a pre-selected site and open its popup.
+            // Fired by StreamGauge::mount() when ?site= is present in the URL.
+            // stream-gauges-updated fires first (renderMarkers runs), so markers
+            // are already stored in this.markers by the time this fires.
+            this._preselectListener = (e) => {
+                const { siteCode, lat, lng } = e.detail;
+                if (lat && lng) {
+                    this.map.flyTo([lat, lng], 12, { duration: 0.8 });
+                }
+                this.map.once('moveend', () => {
+                    const marker = this.markers[siteCode];
+                    if (marker) marker.openPopup();
+                });
+            };
+
             window.addEventListener('stream-gauges-updated', this._sitesListener);
             window.addEventListener('stream-gauge-map-reset', this._resetListener);
+            window.addEventListener('stream-gauge-preselect', this._preselectListener);
         },
 
         /**
@@ -652,6 +674,7 @@ document.addEventListener('alpine:init', () => {
          */
         renderMarkers(sites, fitBounds = false, stateCd = null) {
             this.markerLayer.clearLayers();
+            this.markers = {};
 
             sites.forEach((site) => {
                 if (! site.lat || ! site.lng) return;
@@ -678,6 +701,10 @@ document.addEventListener('alpine:init', () => {
                 const marker = L.marker([site.lat, site.lng], { icon });
                 marker.bindPopup(this.popupContent(site), { minWidth: 230 });
                 this.markerLayer.addLayer(marker);
+
+                if (site.site_code) {
+                    this.markers[site.site_code] = marker;
+                }
             });
 
             if (fitBounds) {
@@ -775,6 +802,7 @@ document.addEventListener('alpine:init', () => {
         destroy() {
             window.removeEventListener('stream-gauges-updated', this._sitesListener);
             window.removeEventListener('stream-gauge-map-reset', this._resetListener);
+            window.removeEventListener('stream-gauge-preselect', this._preselectListener);
             if (this.map) {
                 this.map.remove();
                 this.map = null;

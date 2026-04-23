@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Pages;
 
+use App\Models\SavedStation;
 use App\Models\User;
+use App\Models\UsgsStation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -98,5 +100,89 @@ class DashboardTest extends TestCase
             ->call('deleteSearch', $search->id);
 
         $this->assertDatabaseHas('saved_earthquake_searches', ['id' => $search->id]);
+    }
+
+    /**
+     * Saved stream gauge stations belonging to the user are displayed.
+     */
+    public function test_saved_stations_are_listed(): void
+    {
+        $user    = User::factory()->create();
+        $station = UsgsStation::factory()->create(['name' => 'Potomac at DC', 'site_no' => '01646500']);
+
+        SavedStation::create([
+            'user_id'    => $user->id,
+            'station_id' => $station->id,
+            'state_cd'   => 'va',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Potomac at DC');
+    }
+
+    /**
+     * A user can delete their own saved station via the Livewire action.
+     */
+    public function test_user_can_delete_own_station(): void
+    {
+        $user    = User::factory()->create();
+        $station = UsgsStation::factory()->create();
+
+        $record = SavedStation::create([
+            'user_id'    => $user->id,
+            'station_id' => $station->id,
+            'state_cd'   => 'va',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Pages\Dashboard::class)
+            ->call('deleteStation', $record->id);
+
+        $this->assertDatabaseMissing('saved_stations', ['id' => $record->id]);
+    }
+
+    /**
+     * A user cannot delete a saved station belonging to someone else.
+     */
+    public function test_user_cannot_delete_another_users_station(): void
+    {
+        $owner   = User::factory()->create();
+        $other   = User::factory()->create();
+        $station = UsgsStation::factory()->create();
+
+        $record = SavedStation::create([
+            'user_id'    => $owner->id,
+            'station_id' => $station->id,
+            'state_cd'   => 'va',
+        ]);
+
+        Livewire::actingAs($other)
+            ->test(\App\Livewire\Pages\Dashboard::class)
+            ->call('deleteStation', $record->id);
+
+        $this->assertDatabaseHas('saved_stations', ['id' => $record->id]);
+    }
+
+    /**
+     * Dashboard shows the "Open in HydroWatch" deep-link for a saved station.
+     */
+    public function test_dashboard_shows_hydrowatch_deep_link(): void
+    {
+        $user    = User::factory()->create();
+        $station = UsgsStation::factory()->create(['site_no' => '01646500']);
+
+        SavedStation::create([
+            'user_id'    => $user->id,
+            'station_id' => $station->id,
+            'state_cd'   => 'va',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('hydro-watch')
+            ->assertSee('01646500');
     }
 }
