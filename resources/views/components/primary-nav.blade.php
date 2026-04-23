@@ -7,7 +7,6 @@
                 CronosPulse
             </a>
             <div class="hidden items-center gap-1 sm:flex">
-                <x-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">Home</x-nav-link>
                 <x-nav-link href="{{ route('quake-watch') }}" :active="request()->routeIs('quake-watch')">QuakeWatch</x-nav-link>
                 <x-nav-link href="{{ route('volcano-watch') }}" :active="request()->routeIs('volcano-watch')">VolcanoWatch</x-nav-link>
                 <x-nav-link href="{{ route('hydro-watch') }}" :active="request()->routeIs('hydro-watch')">HydroWatch</x-nav-link>
@@ -91,7 +90,6 @@
     <div id="mobile-nav" x-show="mobileOpen" x-collapse class="border-t border-border sm:hidden">
         <div class="px-4 pb-4 pt-2">
             <div class="space-y-1">
-                <x-responsive-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">Home</x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('quake-watch') }}" :active="request()->routeIs('quake-watch')">QuakeWatch</x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('volcano-watch') }}" :active="request()->routeIs('volcano-watch')">VolcanoWatch</x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('hydro-watch') }}" :active="request()->routeIs('hydro-watch')">HydroWatch</x-responsive-nav-link>

@@ -1,7 +1,7 @@
 <x-slot:seo>
     <x-seo
         title="Real-Time Geophysical Data"
-        description="Live earthquake activity, volcano status, and active flood alerts across the United States — sourced from USGS and the National Weather Service."
+        description="Live earthquake activity, volcano status, active flood alerts, and real-time stream gauge readings across the United States — sourced from USGS and the National Weather Service."
         :canonical="url('/')"
     />
 </x-slot:seo>
@@ -20,8 +20,8 @@
                 </h1>
                 <p class="text-lg leading-relaxed text-muted">
                     Real-time geophysical data from USGS and the National Weather Service —
-                    earthquakes, volcano activity, and active flood alerts across the United States,
-                    visualised and updated as events unfold.
+                    earthquakes, volcano activity, active flood alerts, and live stream gauge readings
+                    across the United States, visualised and updated as events unfold.
                 </p>
                 <div class="flex flex-wrap gap-2 pt-2">
                     <a href="{{ route('quake-watch') }}" style="background:var(--color-badge-eq-bg);color:var(--color-badge-eq-text);border:1px solid var(--color-badge-eq-border)"
@@ -34,7 +34,7 @@
                     </a>
                     <a href="{{ route('hydro-watch') }}" style="background:var(--color-badge-flood-bg);color:var(--color-badge-flood-text);border:1px solid var(--color-badge-flood-border)"
                        class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium transition-opacity hover:opacity-75">
-                        Flood Alerts →
+                        Flood & Streamflow →
                     </a>
                 </div>
             </div>
@@ -113,17 +113,18 @@
             <div class="rounded-xl border border-border bg-surface p-6 transition-colors hover:bg-surface-hover">
                 <div class="mb-3 flex items-center gap-3">
                     <x-label variant="flood">Flood</x-label>
-                    <h3 class="font-semibold text-text">Flood Alerts</h3>
+                    <h3 class="font-semibold text-text">Flood & Streamflow Data</h3>
                 </div>
                 <p class="text-sm text-muted">
-                    Active NWS flood watches, warnings, and advisories across the United States.
-                    Alerts are mapped as GeoJSON polygons by affected zone and filterable by state,
-                    sorted by CAP severity level.
+                    Active NWS flood watches, warnings, and advisories alongside live USGS stream
+                    gauge readings. Flood zones are mapped as GeoJSON polygons; gauges show
+                    real-time streamflow and gage height for hundreds of active monitoring sites
+                    across the US.
                 </p>
                 <ul class="mt-4 space-y-1 text-sm text-muted">
                     <li class="flex items-center gap-2">
                         <span class="size-1 rounded-full bg-accent-muted"></span>
-                        Watches, warnings, and advisories
+                        Flood watches, warnings, and advisories
                     </li>
                     <li class="flex items-center gap-2">
                         <span class="size-1 rounded-full bg-accent-muted"></span>
@@ -135,7 +136,15 @@
                     </li>
                     <li class="flex items-center gap-2">
                         <span class="size-1 rounded-full bg-accent-muted"></span>
-                        National feed + per-state map view
+                        Live streamflow (ft³/s) and gage height (ft)
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="size-1 rounded-full bg-accent-muted"></span>
+                        3-day sparkline charts per gauge site
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="size-1 rounded-full bg-accent-muted"></span>
+                        Per-state map with hundreds of active sites
                     </li>
                 </ul>
             </div>
