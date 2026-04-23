@@ -56,6 +56,8 @@ class WaterServicesQuery
 
     private ?string $siteStatus = null;
 
+    private ?string $siteOutput = null;
+
     private function __construct()
     {
     }
@@ -192,6 +194,22 @@ class WaterServicesQuery
     }
 
     /**
+     * Control the amount of site metadata included in the response.
+     *
+     * Use 'expanded' to include `sourceInfo.siteProperty[]` — an array of key/value
+     * pairs containing state FIPS code, HUC, county FIPS code, and site type code.
+     * Defaults to 'default' (basic metadata only) when omitted.
+     *
+     * @param string $output Either 'default' or 'expanded'.
+     */
+    public function siteOutput(string $output): self
+    {
+        $this->siteOutput = $output;
+
+        return $this;
+    }
+
+    /**
      * Filter results to sites with the given operational status.
      *
      * @param string $siteStatus One of 'all', 'active', or 'inactive'. Defaults to 'all' in the API.
@@ -252,6 +270,7 @@ class WaterServicesQuery
             'endDT'       => $this->endDt?->toIso8601String(),
             'siteType'    => $this->siteType,
             'siteStatus'  => $this->siteStatus,
+            'siteOutput'  => $this->siteOutput,
         ], fn ($value) => $value !== null);
     }
 }

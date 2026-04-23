@@ -746,13 +746,19 @@ document.addEventListener('alpine:init', () => {
                             <td style="text-align:right;font-weight:600;color:#111827;">${esc(site.site_code)}</td>
                         </tr>
                     </table>
-                    <div style="margin-top:10px;">
+                    <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
                         <button
                             onclick="window.dispatchEvent(new CustomEvent('stream-gauge-selected', { detail: { siteCode: '${esc(site.site_code)}' } }))"
                             style="width:100%;padding:5px 0;background:${this.cssVar('--color-accent')};color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;"
                         >
                             Load 3-day chart
                         </button>
+                        <a
+                            href="/hydro/station/${esc(site.site_code)}"
+                            style="display:block;width:100%;padding:5px 0;border:1px solid #d1d5db;border-radius:6px;font-size:12px;font-weight:600;color:#374151;text-align:center;text-decoration:none;box-sizing:border-box;"
+                        >
+                            View details →
+                        </a>
                     </div>
                     ${site.is_provisional ? '<div style="margin-top:6px;font-size:11px;color:#9ca3af;">P — Provisional data</div>' : ''}
                 </div>

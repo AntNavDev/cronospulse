@@ -10,6 +10,7 @@ use App\Api\USGSVolcano;
 use App\Api\USGSWaterServices;
 use App\Services\EarthquakeService;
 use App\Services\NWSAlertsService;
+use App\Services\StationDetailService;
 use App\Services\VolcanoService;
 use App\Services\WaterServicesService;
 use Illuminate\Support\Facades\URL;
@@ -30,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(VolcanoService::class);
         $this->app->singleton(WaterServicesService::class);
         $this->app->singleton(NWSAlertsService::class);
+        $this->app->singleton(StationDetailService::class);
     }
 
     /**

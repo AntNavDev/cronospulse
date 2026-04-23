@@ -56,7 +56,7 @@ USGS monitoring locations. Shared by both water level and streamflow readings �
 | `id` | `bigint unsigned` | Primary key |
 | `site_no` | `varchar(20)` | Unique. USGS site number, e.g. `09380000` (Colorado River at Lee Ferry). |
 | `name` | `varchar(255)` | Station name as returned by USGS |
-| `state` | `char(2)` | State abbreviation, e.g. `AZ` |
+| `state` | `char(2)` | Nullable. State abbreviation, e.g. `AZ`. Null for stations upserted via the detail page — requires a separate USGS Site Service call to populate. |
 | `county` | `varchar(255)` | Nullable |
 | `huc` | `varchar(16)` | Nullable. Hydrologic unit code — identifies the watershed. |
 | `site_type` | `varchar(10)` | USGS site type code: `ST` (stream), `LK` (lake), `GW` (groundwater), etc. |

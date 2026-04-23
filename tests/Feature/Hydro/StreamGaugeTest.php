@@ -7,12 +7,24 @@ namespace Tests\Feature\Hydro;
 use App\Livewire\Hydro\StreamGauge;
 use App\Services\WaterServicesService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
 
 class StreamGaugeTest extends TestCase
 {
+    /**
+     * Flush the in-memory array cache before each test so that cache entries
+     * warmed by earlier tests (e.g. usgs.water.sites.va) don't bleed through
+     * and cause Http::fake() calls to be silently skipped.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Cache::flush();
+    }
+
     /**
      * Component renders without errors when the service returns sites.
      */
