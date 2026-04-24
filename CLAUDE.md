@@ -79,6 +79,88 @@ The site is **public by default**. Authentication is optional and unlocks additi
 @endauth
 ```
 
+## Form Component Standards
+
+**Raw HTML form elements are forbidden in Blade templates.** Every form control must use the corresponding Blade component so visual changes can be made in one place.
+
+### Available components
+
+| Element | Component | Notes |
+|---|---|---|
+| `<input type="text/number/…">` | `<x-input>` | Accepts all input attributes; `type` prop defaults to `'text'` |
+| `<input type="radio">` + label | `<x-radio>` | Wraps input in a label — pass text in the slot |
+| `<input type="checkbox">` + label | `<x-checkbox>` | Wraps input in a label — pass text in the slot |
+| `<select>` | `<x-select>` | Accepts `disabled`; pass `class="w-full"` to stretch |
+| `<button>` | `<x-button>` | See variants and sizes below |
+| Form field label | `<x-input-label>` | Use `compact` prop for xs/uppercase section labels |
+| Field error message | `<x-input-error>` | |
+| Search input with icon | `<x-search-input>` | |
+
+### `<x-button>` variants and sizes
+
+```blade
+{{-- Variants --}}
+<x-button variant="primary">Save</x-button>          {{-- solid accent, default --}}
+<x-button variant="secondary">Cancel</x-button>      {{-- bordered, surface-raised --}}
+<x-button variant="danger">Delete</x-button>         {{-- solid red --}}
+<x-button variant="success">Confirm</x-button>       {{-- solid green --}}
+<x-button variant="ghost">Close</x-button>           {{-- transparent + hover bg --}}
+<x-button variant="link">Reset map</x-button>        {{-- accent text, no shape --}}
+<x-button variant="muted-link">← Back</x-button>    {{-- muted text, no shape --}}
+
+{{-- Sizes (ignored by link / muted-link) --}}
+<x-button size="sm">+ Save</x-button>   {{-- px-2.5 py-1 text-xs --}}
+<x-button size="md">Search</x-button>  {{-- px-4 py-2 text-sm (default) --}}
+<x-button size="lg">Submit</x-button>  {{-- px-5 py-2.5 text-base --}}
+
+{{-- link/muted-link inherit font size from context; pass class="text-xs" when needed --}}
+<x-button variant="link" class="text-xs" @click="...">Reset map</x-button>
+```
+
+### `<x-input-label>` compact variant
+
+```blade
+{{-- Standard form field label (text-sm text-text) --}}
+<x-input-label for="email" class="mb-1.5">Email</x-input-label>
+
+{{-- Compact section label (text-xs uppercase muted) — for map panel headers, etc. --}}
+<x-input-label for="state" compact class="mb-1.5">State</x-input-label>
+```
+
+### Documented exceptions where raw `<button>` is acceptable
+
+These patterns cannot cleanly be expressed as `<x-button>` without compromising layout:
+
+- **Table sort buttons** — `<button>` inside `<th>` elements; structural table controls with flex-aligned sort arrows
+- **Interactive card-row buttons** — full-width `w-full text-left` buttons styled as list item rows (e.g. flood alert list rows)
+- **Icon-only action buttons** — `p-1` square buttons containing only an SVG icon (e.g. dashboard delete/remove buttons)
+
+Use `<a>` (not `<x-button>`) for links that navigate — `<x-button>` always renders a `<button>` element.
+
+### Alpine bindings on Blade components
+
+When passing Alpine reactive bindings to a Blade component, use the full `x-bind:attr` form — **never the `:attr` shorthand**. Blade intercepts `:attr` and evaluates it as PHP, which throws "Undefined constant" for Alpine JS variables.
+
+```blade
+{{-- Wrong — Blade evaluates "unit === 'km'" as PHP --}}
+<x-radio :checked="unit === 'km'">Kilometers</x-radio>
+
+{{-- Correct — Blade ignores x-bind:*, Alpine picks it up --}}
+<x-radio x-bind:checked="unit === 'km'">Kilometers</x-radio>
+```
+
+This applies to any Alpine binding (`:disabled`, `:class`, `:value`, etc.) passed as a Blade component attribute.
+
+Similarly, **never use `@disabled(expr)` inside a Blade component tag** — it is compiled as a PHP control structure, which corrupts the component attribute list and causes parse errors. Use `:disabled="$phpVar"` instead (valid for PHP/Livewire variables):
+
+```blade
+{{-- Wrong — @disabled inside a component tag breaks compilation --}}
+<x-button @disabled($listPage <= 1)>...</x-button>
+
+{{-- Correct — :disabled with a PHP expression --}}
+<x-button :disabled="$listPage <= 1">...</x-button>
+```
+
 ## Documentation
 
 Whenever a migration is created or modified, or a model is added or changed, update `docs/data-model.md` to reflect the current schema — columns, types, relationships, and any index or constraint changes.

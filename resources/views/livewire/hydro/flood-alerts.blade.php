@@ -30,18 +30,12 @@
 
         {{-- State selector for the map panel --}}
         <div class="w-52 shrink-0">
-            <label for="flood-state" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted">
-                Map state
-            </label>
-            <select
-                id="flood-state"
-                wire:model.live="stateCd"
-                class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20"
-            >
+            <x-input-label for="flood-state" compact class="mb-1.5">Map state</x-input-label>
+            <x-select id="flood-state" wire:model.live="stateCd" class="w-full">
                 @foreach (\App\Livewire\Hydro\FloodAlerts::US_STATES as $code => $name)
                     <option value="{{ $code }}">{{ $name }}</option>
                 @endforeach
-            </select>
+            </x-select>
         </div>
     </div>
 
@@ -60,13 +54,9 @@
                     {{-- Detail panel --}}
                     <div class="flex-1 overflow-y-auto rounded-xl border border-border bg-surface p-5">
                         <div class="mb-4 flex items-center justify-between gap-3">
-                            <button
-                                type="button"
-                                wire:click="$set('selectedAlertId', null)"
-                                class="flex items-center gap-1 text-xs text-muted hover:text-text focus:outline-none"
-                            >
+                            <x-button variant="muted-link" class="text-xs" wire:click="$set('selectedAlertId', null)">
                                 ← Back to list
-                            </button>
+                            </x-button>
                         </div>
 
                         <div class="mb-4">
@@ -167,23 +157,23 @@
                         {{-- Pagination --}}
                         @if ($totalPages > 1)
                             <div class="mt-3 flex items-center justify-between text-xs text-muted">
-                                <button
-                                    type="button"
+                                <x-button
+                                    variant="link"
+                                    class="text-xs"
                                     wire:click="previousPage"
-                                    @class(['text-accent hover:underline focus:outline-none' => $listPage > 1, 'cursor-not-allowed opacity-40' => $listPage <= 1])
-                                    @disabled($listPage <= 1)
+                                    :disabled="$listPage <= 1"
                                 >
                                     ← Previous
-                                </button>
+                                </x-button>
                                 <span>{{ $listPage }} / {{ $totalPages }} ({{ $totalAlerts }} alerts)</span>
-                                <button
-                                    type="button"
+                                <x-button
+                                    variant="link"
+                                    class="text-xs"
                                     wire:click="nextPage"
-                                    @class(['text-accent hover:underline focus:outline-none' => $listPage < $totalPages, 'cursor-not-allowed opacity-40' => $listPage >= $totalPages])
-                                    @disabled($listPage >= $totalPages)
+                                    :disabled="$listPage >= $totalPages"
                                 >
                                     Next →
-                                </button>
+                                </x-button>
                             </div>
                         @else
                             <p class="mt-2 text-xs text-muted">{{ $totalAlerts }} alert{{ $totalAlerts !== 1 ? 's' : '' }} nationally</p>
@@ -214,13 +204,13 @@
                         {{ count($mapAlerts ?? []) }} alert{{ count($mapAlerts ?? []) !== 1 ? 's' : '' }}
                         in {{ \App\Livewire\Hydro\FloodAlerts::US_STATES[$stateCd] ?? strtoupper($stateCd) }}
                     </span>
-                    <button
-                        type="button"
-                        class="cursor-pointer text-accent hover:underline focus:outline-none"
+                    <x-button
+                        variant="link"
+                        class="text-xs"
                         @click="window.dispatchEvent(new CustomEvent('flood-alerts-map-reset'))"
                     >
                         Reset map
-                    </button>
+                    </x-button>
                 </div>
 
             </div>

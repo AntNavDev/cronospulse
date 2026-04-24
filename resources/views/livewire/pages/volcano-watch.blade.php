@@ -67,37 +67,25 @@
 
                 {{-- Region filter --}}
                 <div class="flex-1">
-                    <label for="volcano-region" class="mb-1.5 block text-sm font-medium text-text">
-                        Region
-                    </label>
-                    <select
-                        id="volcano-region"
-                        wire:model.live="regionFilter"
-                        class="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20"
-                    >
+                    <x-input-label for="volcano-region" class="mb-1.5">Region</x-input-label>
+                    <x-select id="volcano-region" wire:model.live="regionFilter" class="w-full">
                         <option value="">All regions</option>
                         @foreach ($regions as $region)
                             <option value="{{ $region }}">{{ $region }}</option>
                         @endforeach
-                    </select>
+                    </x-select>
                 </div>
 
                 {{-- Alert level filter --}}
                 <div class="flex-1">
-                    <label for="volcano-alert" class="mb-1.5 block text-sm font-medium text-text">
-                        Alert level
-                    </label>
-                    <select
-                        id="volcano-alert"
-                        wire:model.live="alertFilter"
-                        class="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20"
-                    >
+                    <x-input-label for="volcano-alert" class="mb-1.5">Alert level</x-input-label>
+                    <x-select id="volcano-alert" wire:model.live="alertFilter" class="w-full">
                         <option value="">All levels</option>
                         <option value="NORMAL">Normal</option>
                         <option value="ADVISORY">Advisory</option>
                         <option value="WATCH">Watch</option>
                         <option value="WARNING">Warning</option>
-                    </select>
+                    </x-select>
                 </div>
 
             </div>
@@ -137,16 +125,16 @@
                     — filtered
                 @endif
             </p>
-            <button
-                type="button"
-                class="cursor-pointer text-xs text-accent hover:underline focus:outline-none"
+            <x-button
+                variant="link"
+                class="text-xs"
                 @click="
                     window.dispatchEvent(new CustomEvent('volcano-map-reset'));
                     $wire.resetFilters();
                 "
             >
                 Reset map
-            </button>
+            </x-button>
         </div>
 
         {{-- No results --}}

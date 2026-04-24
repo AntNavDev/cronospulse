@@ -34,15 +34,7 @@
             <x-input-error id="password-error" :messages="$errors->get('password')" role="alert" />
         </div>
 
-        <div class="flex items-center gap-2">
-            <input
-                id="remember"
-                type="checkbox"
-                name="remember"
-                class="rounded border-border text-accent focus-visible:ring-[var(--color-border-focus)]"
-            >
-            <label for="remember" class="text-sm text-muted">Remember me</label>
-        </div>
+        <x-checkbox name="remember">Remember me</x-checkbox>
 
         <x-button type="submit" variant="primary" class="w-full">
             Sign in
