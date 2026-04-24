@@ -3,6 +3,6 @@
 
     <form method="POST" action="{{ route('logout') }}">
         @csrf
-        <button type="submit">Log out</button>
+        <x-button type="submit" variant="secondary">Log out</x-button>
     </form>
 </x-layouts.guest>

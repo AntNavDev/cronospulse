@@ -23,18 +23,12 @@
         </div>
 
         <div class="w-44">
-            <label for="stream-state" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted">
-                State
-            </label>
-            <select
-                id="stream-state"
-                wire:model.live="stateCd"
-                class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20"
-            >
+            <x-input-label for="stream-state" compact class="mb-1.5">State</x-input-label>
+            <x-select id="stream-state" wire:model.live="stateCd" class="w-full">
                 @foreach (\App\Livewire\Hydro\StreamGauge::US_STATES as $code => $name)
                     <option value="{{ $code }}">{{ $name }}</option>
                 @endforeach
-            </select>
+            </x-select>
         </div>
     </div>
 
@@ -62,13 +56,13 @@
                 @if ($sites !== null)
                     <div class="mt-2 flex items-center justify-between text-xs text-muted">
                         <span>{{ count($sites) }} active sites</span>
-                        <button
-                            type="button"
-                            class="cursor-pointer text-accent hover:underline focus:outline-none"
+                        <x-button
+                            variant="link"
+                            class="text-xs"
                             @click="window.dispatchEvent(new CustomEvent('stream-gauge-map-reset'))"
                         >
                             Reset map
-                        </button>
+                        </x-button>
                     </div>
                 @endif
             </div>
@@ -144,30 +138,18 @@
                             <div class="flex shrink-0 items-center gap-3">
                                 @auth
                                     @if (in_array($selectedSiteCode, $savedSiteCodes, true))
-                                        <button
-                                            type="button"
-                                            wire:click="unsaveStation"
-                                            class="inline-flex items-center gap-1 rounded-lg border border-border bg-surface-raised px-2.5 py-1 text-xs font-medium text-muted transition hover:bg-surface-hover focus:outline-none"
-                                        >
+                                        <x-button variant="secondary" size="sm" wire:click="unsaveStation">
                                             ✓ Saved
-                                        </button>
+                                        </x-button>
                                     @else
-                                        <button
-                                            type="button"
-                                            wire:click="saveStation"
-                                            class="inline-flex items-center gap-1 rounded-lg border border-accent bg-accent px-2.5 py-1 text-xs font-medium text-white transition hover:bg-accent-hover focus:outline-none"
-                                        >
+                                        <x-button variant="primary" size="sm" wire:click="saveStation">
                                             + Save
-                                        </button>
+                                        </x-button>
                                     @endif
                                 @endauth
-                                <button
-                                    type="button"
-                                    wire:click="$set('selectedSiteCode', null)"
-                                    class="text-xs text-muted hover:text-text focus:outline-none"
-                                >
+                                <x-button variant="muted-link" class="text-xs" wire:click="$set('selectedSiteCode', null)">
                                     ✕ Close
-                                </button>
+                                </x-button>
                             </div>
                         </div>
 
