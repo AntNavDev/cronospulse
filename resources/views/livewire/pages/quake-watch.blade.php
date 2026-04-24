@@ -52,12 +52,12 @@
         window.dispatchEvent(new CustomEvent('map-location-set', { detail: { lat, lng, meters: radiusKm * 1000 } }));
         $wire.search(lat, lng, radiusKm, minMag, 'UTC')
     })"
-    @map-clicked.window="lat = $event.detail.lat; lng = $event.detail.lng; timezone = $event.detail.timezone ?? 'UTC'"
+    @map-clicked.window="lat = $event.detail.lat; lng = $event.detail.lng; timezone = $event.detail.timezone ?? 'UTC'; $wire.search(lat, lng, radiusKm, minMag, timezone)"
 >
     <div class="mb-6">
         <h1 class="text-2xl font-semibold text-text">QuakeWatch</h1>
         <p class="mt-1 text-sm text-muted">
-            Click anywhere on the map to set a search origin, then adjust the radius and hit Search.
+            Click anywhere on the map to search. Adjust the radius and magnitude, then click Search to re-run.
         </p>
     </div>
 
@@ -73,10 +73,10 @@
 
             {{-- Radius input --}}
             <div>
-                <label for="quake-radius" class="mb-1.5 block text-sm font-medium text-text">
+                <x-input-label for="quake-radius" class="mb-1.5">
                     Search radius (<span x-text="unit"></span>)
-                </label>
-                <input
+                </x-input-label>
+                <x-input
                     id="quake-radius"
                     type="number"
                     min="1"
@@ -84,26 +84,26 @@
                     placeholder="50"
                     x-model="radius"
                     @change="dispatchRadius()"
-                    class="no-spin w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-text placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20"
+                    class="no-spin"
                 />
             </div>
 
             {{-- Minimum magnitude --}}
             <div>
-                <label for="quake-min-mag" class="mb-1.5 block text-sm font-medium text-text">
+                <x-input-label for="quake-min-mag" class="mb-1.5">
                     Earthquakes above this magnitude
-                </label>
-                <select
+                </x-input-label>
+                <x-select
                     id="quake-min-mag"
                     x-model.number="minMag"
-                    class="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20"
+                    class="w-full"
                 >
                     <option value="0">Any magnitude</option>
                     @foreach (range(8, 80) as $step)
                         @php $val = $step / 10; @endphp
                         <option value="{{ $val }}">M {{ number_format($val, 1) }}+</option>
                     @endforeach
-                </select>
+                </x-select>
             </div>
 
             {{-- Unit toggle --}}
@@ -112,26 +112,12 @@
                  fires switchUnit(), which sees this.unit already changed and bails early
                  before converting the radius value. --}}
             <div class="flex gap-5">
-                <label class="flex cursor-pointer items-center gap-2 text-sm text-text">
-                    <input
-                        type="radio"
-                        name="radius-unit"
-                        :checked="unit === 'km'"
-                        @change="switchUnit('km')"
-                        class="accent-[var(--color-accent)]"
-                    />
+                <x-radio name="radius-unit" x-bind:checked="unit === 'km'" @change="switchUnit('km')">
                     Kilometers
-                </label>
-                <label class="flex cursor-pointer items-center gap-2 text-sm text-text">
-                    <input
-                        type="radio"
-                        name="radius-unit"
-                        :checked="unit === 'mi'"
-                        @change="switchUnit('mi')"
-                        class="accent-[var(--color-accent)]"
-                    />
+                </x-radio>
+                <x-radio name="radius-unit" x-bind:checked="unit === 'mi'" @change="switchUnit('mi')">
                     Miles
-                </label>
+                </x-radio>
             </div>
 
             {{-- Selected location display --}}
@@ -167,15 +153,15 @@
             </div>
 
             {{-- Search button --}}
-            <button
-                type="button"
-                :disabled="lat === null"
+            <x-button
+                variant="primary"
+                class="w-full"
+                x-bind:disabled="lat === null"
                 @click="$wire.search(lat, lng, radiusKm, minMag, timezone)"
-                class="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 disabled:cursor-not-allowed disabled:opacity-40"
             >
                 <span wire:loading.remove wire:target="search">Search</span>
                 <span wire:loading wire:target="search">Searching…</span>
-            </button>
+            </x-button>
 
             {{-- Save this search (auth-gated, shown once results exist) --}}
             @auth
@@ -190,13 +176,13 @@
                                 maxlength="100"
                                 class="flex-1 text-sm"
                             />
-                            <button
-                                type="button"
+                            <x-button
+                                variant="secondary"
+                                class="shrink-0"
                                 @click="$wire.saveSearch(lat, lng, radiusKm, minMag)"
-                                class="shrink-0 rounded-lg border border-border bg-surface-raised px-3 py-2 text-sm font-medium text-text transition hover:bg-surface-hover"
                             >
                                 Save
-                            </button>
+                            </x-button>
                         </div>
                         @if ($saveMessage)
                             <p class="mt-2 text-xs {{ $saveSuccess ? 'text-success' : 'text-danger' }}">
