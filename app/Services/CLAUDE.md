@@ -66,4 +66,4 @@ Do not return `null` or empty arrays on failure — throw so the component can d
 1. Create `app/Services/NewService.php`
 2. Inject the corresponding API client via constructor: `public function __construct(private readonly USGSNewService $client) {}`
 3. Register both as singletons in `AppServiceProvider`
-4. Inject into Livewire components via `#[Inject]`
+4. Inject into Livewire components via a `boot()` method — never `#[Inject]`
