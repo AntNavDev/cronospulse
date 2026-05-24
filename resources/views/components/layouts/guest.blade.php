@@ -21,6 +21,12 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @if (config('services.umami.url') && config('services.umami.website_id'))
+        <script async defer
+                src="{{ config('services.umami.url') }}/script.js"
+                data-website-id="{{ config('services.umami.website_id') }}"></script>
+    @endif
 </head>
 <body
     class="min-h-screen bg-bg text-text antialiased"
