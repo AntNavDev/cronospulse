@@ -28,6 +28,12 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+
+    @if (config('services.umami.url') && config('services.umami.website_id'))
+        <script async defer
+                src="{{ config('services.umami.url') }}/script.js"
+                data-website-id="{{ config('services.umami.website_id') }}"></script>
+    @endif
 </head>
 <body
     class="min-h-screen bg-bg text-text antialiased"
